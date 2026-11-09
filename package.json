@@ -4,15 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Inventário patrimonial offline-first para Android e desktop",
-"scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "lint": "eslint .",
-  "preview": "vite preview"
-}    "typecheck": "tsc -b --pretty false",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint .",
     "format": "prettier --write ."
   },
   "dependencies": {
