@@ -9,8 +9,7 @@
   "build": "vite build",
   "lint": "eslint .",
   "preview": "vite preview"
-}
-    "typecheck": "tsc -b --pretty false",
+}    "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
