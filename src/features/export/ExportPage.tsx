@@ -12,20 +12,16 @@ import { downloadBackup } from '../../services/backup';
 import {
   exportAssetsCsv,
   exportAuditCsv,
-  exportDivergencesCsv,
   exportEventsCsv,
   exportManualAssetsCsv,
   exportPendingsCsv,
-  exportRoomsCsv,
   exportSessionEventsCsv,
   exportSobrasCsv,
   exportTransfersCsv,
-  exportUnknownCsv,
 } from '../../services/export';
 import {
   exportAuditXlsx,
   exportPendingsXlsx,
-  exportRoomsXlsx,
   exportSobrasXlsx,
   exportTransfersXlsx,
 } from '../../services/exportXlsx';
@@ -35,7 +31,7 @@ import { formatDateTime, formatNumber } from '../../domain/format';
 
 export function ExportPage() {
   const { session } = useApp();
-  const { assets, events, assetsById, states, rooms, roomList, summary } = useInventoryData();
+  const { assets, events, assetsById, states, roomList, summary } = useInventoryData();
   const { push } = useToast();
   const lastBackupAt = useLiveQuery(() => getSetting('lastBackupAt'), []);
   const transfers = useLiveQuery(() => listTransferRequests(), []);
@@ -232,14 +228,14 @@ export function ExportPage() {
             <Button
               icon="download"
               disabled={!sessionId}
-              onClick={() => notify(exportSobrasCsv(events, sessionId))}
+              onClick={() => notify(exportSobrasCsv(events, sessionId ?? ''))}
             >
               CSV
             </Button>
             <Button
               icon="download"
               disabled={!sessionId}
-              onClick={() => notify(exportSobrasXlsx(events, sessionId))}
+              onClick={() => notify(exportSobrasXlsx(events, sessionId ?? ''))}
             >
               XLSX
             </Button>
