@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Inventário patrimonial offline-first para Android e desktop",
- "scripts": {
+"scripts": {
   "dev": "vite",
-  "build": "npm rebuild && tsc -b && vite build",
+  "build": "vite build",
   "lint": "eslint .",
   "preview": "vite preview"
 }
