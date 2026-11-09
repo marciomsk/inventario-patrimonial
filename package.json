@@ -6,7 +6,8 @@
   "description": "Inventário patrimonial offline-first para Android e desktop",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npx esbuild --version >/dev/null 2>&1 || true; tsc -b && vite build",
+  "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
