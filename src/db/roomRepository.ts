@@ -21,6 +21,7 @@ export interface RoomInput {
   nome?: string | null;
   responsavel?: string | null;
   relatorioEntregue?: boolean;
+  enviadoAoResponsavel?: boolean;
 }
 
 function validateCode(value: unknown): string | null {
@@ -125,14 +126,14 @@ export async function ensureRoom(label: string): Promise<Room> {
 export async function createRoom(input: RoomInput): Promise<Room> {
   const fields = buildRoomFields(input);
   const responsavel = cleanText(input.responsavel) || null;
-  const relatorioEntregue = Boolean(input.relatorioEntregue);
+  const entregue = Boolean(input.relatorioEntregue || input.enviadoAoResponsavel);
+  const now = nowIso();
 
   return db.transaction('rw', db.rooms, async () => {
     const existing = await db.rooms.where('key').equals(fields.key).first();
     if (existing) {
       throw new RoomConflictError(`Já existe uma sala com essa identidade: ${existing.label}.`);
     }
-    const now = nowIso();
     const room: Room = {
       id: createId(),
       key: fields.key,
@@ -141,7 +142,9 @@ export async function createRoom(input: RoomInput): Promise<Room> {
       label: fields.label,
       aliases: [fields.label],
       responsavel,
-      relatorioEntregue,
+      relatorioEntregue: entregue,
+      enviadoAoResponsavel: entregue,
+      dataEnvio: entregue ? now : null,
       createdAt: now,
       updatedAt: now,
     };
@@ -158,6 +161,8 @@ export async function setRoomRelatorioEntregue(id: string, relatorioEntregue: bo
     const updated: Room = {
       ...room,
       relatorioEntregue,
+      enviadoAoResponsavel: relatorioEntregue,
+      dataEnvio: relatorioEntregue ? (room.dataEnvio ?? now) : null,
       updatedAt: now,
     };
     await db.rooms.put(updated);
@@ -198,6 +203,13 @@ export async function updateRoom(id: string, input: RoomInput): Promise<Room> {
     }
 
     const now = nowIso();
+    const nextEntregue =
+      input.relatorioEntregue !== undefined
+        ? Boolean(input.relatorioEntregue)
+        : input.enviadoAoResponsavel !== undefined
+          ? Boolean(input.enviadoAoResponsavel)
+          : room.relatorioEntregue;
+
     const next: Room = {
       ...room,
       codigo: fields.codigo,
@@ -208,7 +220,9 @@ export async function updateRoom(id: string, input: RoomInput): Promise<Room> {
         a.localeCompare(b, 'pt-BR'),
       ),
       responsavel,
-      relatorioEntregue: input.relatorioEntregue !== undefined ? Boolean(input.relatorioEntregue) : room.relatorioEntregue,
+      relatorioEntregue: nextEntregue,
+      enviadoAoResponsavel: nextEntregue,
+      dataEnvio: nextEntregue ? (room.dataEnvio ?? now) : null,
       updatedAt: now,
     };
     await db.rooms.put(next);

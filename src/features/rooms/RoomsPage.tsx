@@ -10,6 +10,7 @@ import { roomLabel } from '../../domain/plaqueta';
 import { normalizeRoomName } from '../../domain/rooms';
 import { exportRoomsCsv } from '../../services/export';
 import { CARGA_INICIAL, SEM_LOCAL } from '../../domain/constants';
+import { setRoomRelatorioEntregue } from '../../db/roomRepository';
 import { RoomFormModal } from './RoomFormModal';
 import type { Room } from '../../domain/types';
 
@@ -152,17 +153,24 @@ export function RoomsPage() {
             <table className="table table--rooms">
               <thead>
                 <tr>
-                  <th>Sala</th>
+                  <th>Sala / Responsável</th>
                   <th>Total</th>
                   <th>Conferidos</th>
                   <th>Pendentes</th>
                   <th>Divergentes</th>
                   <th>Progresso</th>
+                  <th>Envio Responsável</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((room) => {
                   const key = room.roomId ?? `local:${room.local}`;
+                  const registryRoom = room.roomId
+                    ? roomList.find((r) => r.id === room.roomId) ?? null
+                    : roomList.find((r) => r.label === room.local) ?? null;
+                  const entregue = Boolean(registryRoom?.relatorioEntregue);
+
                   return (
                     <tr
                       key={key}
@@ -173,6 +181,11 @@ export function RoomsPage() {
                         <div className="room-cell">
                           <strong>{room.codigo ?? '—'}</strong>
                           <span>{room.nome}</span>
+                          {registryRoom?.responsavel ? (
+                            <span style={{ fontSize: '12px', color: '#166941', fontWeight: 600 }}>
+                              Resp: {registryRoom.responsavel}
+                            </span>
+                          ) : null}
                           {room.local === CARGA_INICIAL ? <Badge tone="legacy">Legado</Badge> : null}
                           {room.local === SEM_LOCAL ? <Badge tone="neutral">Sem sala</Badge> : null}
                           {room.aliases.length > 1 ? (
@@ -190,6 +203,58 @@ export function RoomsPage() {
                           <ProgressBar value={room.percentual} />
                           <span>{formatPercent(room.percentual, 0)}</span>
                         </div>
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className={`badge ${entregue ? 'badge-success' : 'badge-neutral'}`}
+                          style={{
+                            cursor: 'pointer',
+                            border: 'none',
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            fontWeight: 'bold',
+                            backgroundColor: entregue ? '#dcefe3' : '#eef3ef',
+                            color: entregue ? '#0f5132' : '#6c7d74',
+                          }}
+                          onClick={async () => {
+                            if (!registryRoom) {
+                              push('Sala não encontrada no cadastro de registro.', 'warning');
+                              return;
+                            }
+                            try {
+                              const nextVal = !entregue;
+                              await setRoomRelatorioEntregue(registryRoom.id, nextVal);
+                              push(
+                                nextVal
+                                  ? `Relatório da sala ${room.codigo ?? room.nome} marcado como enviado.`
+                                  : `Relatório marcado como pendente.`,
+                                'success',
+                              );
+                            } catch (err) {
+                              push('Erro ao atualizar status de envio.', 'error');
+                            }
+                          }}
+                        >
+                          {entregue ? '✓ Enviado' : 'Pendente'}
+                        </button>
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        {registryRoom ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            icon="save"
+                            onClick={() => {
+                              setEditing(registryRoom);
+                              setFormOpen(true);
+                            }}
+                          >
+                            Editar
+                          </Button>
+                        ) : (
+                          <span className="muted">—</span>
+                        )}
                       </td>
                     </tr>
                   );

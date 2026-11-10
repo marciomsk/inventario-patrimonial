@@ -32,6 +32,9 @@ export interface Room {
   responsavel?: string | null;
   /** Indica se o relatório de inventário foi entregue ao responsável. */
   relatorioEntregue?: boolean;
+  /** Sinônimo / campo de controle de envio ao responsável. */
+  enviadoAoResponsavel?: boolean;
+  dataEnvio?: string | null;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
 }
