@@ -30,6 +30,8 @@ export interface Room {
   aliases: string[];
   /** Responsável pelo setor / sala. */
   responsavel?: string | null;
+  /** Indica se o relatório de inventário foi entregue ao responsável. */
+  relatorioEntregue?: boolean;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
 }

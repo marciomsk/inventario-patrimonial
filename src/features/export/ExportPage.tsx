@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { PageHeader } from '../../components/PageHeader';
 import { Card, CardHeader, StatCard } from '../../components/Card';
@@ -9,6 +9,7 @@ import { useToast } from '../../app/ToastContext';
 import { useInventoryData } from '../../hooks/useInventoryData';
 import { getSetting } from '../../db/settingsRepository';
 import { downloadBackup } from '../../services/backup';
+import { updateRoom, setRoomRelatorioEntregue } from '../../db/roomRepository';
 import {
   exportAssetsCsv,
   exportAuditCsv,
@@ -37,9 +38,46 @@ export function ExportPage() {
   const transfers = useLiveQuery(() => listTransferRequests(), []);
 
   const [selectedRoomId, setSelectedRoomId] = useState('');
+  const [roomSearchTerm, setRoomSearchTerm] = useState('');
+  const [roomResponsavelInput, setRoomResponsavelInput] = useState('');
+  const [roomEntregueInput, setRoomEntregueInput] = useState(false);
   const [selectedResponsible, setSelectedResponsible] = useState('');
 
   const sessionId = session?.id ?? null;
+
+  const selectedRoom = useMemo(
+    () => roomList.find((r) => r.id === selectedRoomId) ?? null,
+    [roomList, selectedRoomId],
+  );
+
+  useEffect(() => {
+    if (selectedRoom) {
+      setRoomResponsavelInput(selectedRoom.responsavel ?? '');
+      setRoomEntregueInput(Boolean(selectedRoom.relatorioEntregue));
+    } else {
+      setRoomResponsavelInput('');
+      setRoomEntregueInput(false);
+    }
+  }, [selectedRoom]);
+
+  const sortedRooms = useMemo(() => {
+    return [...roomList].sort((a, b) => {
+      const codeA = a.codigo ?? '9999';
+      const codeB = b.codigo ?? '9999';
+      return codeA.localeCompare(codeB, 'pt-BR') || a.label.localeCompare(b.label, 'pt-BR');
+    });
+  }, [roomList]);
+
+  const filteredRooms = useMemo(() => {
+    const term = roomSearchTerm.trim().toLowerCase();
+    if (!term) return sortedRooms;
+    return sortedRooms.filter(
+      (r) =>
+        r.label.toLowerCase().includes(term) ||
+        (r.codigo && r.codigo.toLowerCase().includes(term)) ||
+        (r.responsavel && r.responsavel.toLowerCase().includes(term)),
+    );
+  }, [sortedRooms, roomSearchTerm]);
 
   const responsibles = useMemo(() => {
     const set = new Set<string>();
@@ -249,18 +287,82 @@ export function ExportPage() {
             icon="building"
           />
           <div className="form-stack">
-            <select
-              value={selectedRoomId}
-              onChange={(e) => setSelectedRoomId(e.target.value)}
-              className="field"
-            >
-              <option value="">Selecione uma sala...</option>
-              {roomList.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.label} {r.responsavel ? `(Resp: ${r.responsavel})` : ''}
-                </option>
-              ))}
-            </select>
+            <label className="field">
+              <span>Buscar sala (código ou nome)</span>
+              <input
+                value={roomSearchTerm}
+                onChange={(e) => setRoomSearchTerm(e.target.value)}
+                placeholder="Ex.: 0589, Praia..."
+                autoComplete="off"
+              />
+            </label>
+
+            <label className="field">
+              <span>Selecione a sala ({filteredRooms.length} encontradas)</span>
+              <select
+                value={selectedRoomId}
+                onChange={(e) => setSelectedRoomId(e.target.value)}
+              >
+                <option value="">Selecione uma sala...</option>
+                {filteredRooms.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.label} {r.responsavel ? `[Resp: ${r.responsavel}]` : ''} {r.relatorioEntregue ? '✓ [Entregue]' : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {selectedRoom ? (
+              <div className="box" style={{ background: '#f7faf8', padding: '12px', borderRadius: '8px', border: '1px solid #e0e8e3' }}>
+                <label className="field" style={{ marginBottom: '10px' }}>
+                  <span>Vincular / Alterar Responsável</span>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      value={roomResponsavelInput}
+                      onChange={(e) => setRoomResponsavelInput(e.target.value)}
+                      placeholder="Nome do responsável do setor"
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await updateRoom(selectedRoom.id, {
+                            codigo: selectedRoom.codigo,
+                            nome: selectedRoom.nome,
+                            responsavel: roomResponsavelInput,
+                          });
+                          push('Responsável atualizado com sucesso.', 'success');
+                        } catch (err) {
+                          push(err instanceof Error ? err.message : 'Erro ao atualizar responsável.', 'error');
+                        }
+                      }}
+                    >
+                      Salvar
+                    </Button>
+                  </div>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#0f5132' }}>
+                  <input
+                    type="checkbox"
+                    checked={roomEntregueInput}
+                    onChange={async (e) => {
+                      const val = e.target.checked;
+                      setRoomEntregueInput(val);
+                      try {
+                        await setRoomRelatorioEntregue(selectedRoom.id, val);
+                        push(val ? 'Marcado como relatório entregue.' : 'Marcado como relatório não entregue.', 'success');
+                      } catch (err) {
+                        push('Erro ao atualizar status de entrega.', 'error');
+                      }
+                    }}
+                  />
+                  Relatório entregue ao responsável
+                </label>
+              </div>
+            ) : null}
+
             <Button
               variant="primary"
               icon="download"

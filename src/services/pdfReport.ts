@@ -12,10 +12,18 @@ export interface RoomReportData {
 export function generateRoomPdfReport(data: RoomReportData) {
   const { room, assets, states, sessionId } = data;
   
+  // Filtra bens da sala, removendo o registo sintético/fictício cuja plaqueta seja igual ao código da sala
   const roomAssets = assets.filter((a) => {
-    if (room.id) return a.roomId === room.id;
-    return a.localOriginal === room.label;
+    const inRoom = room.id ? a.roomId === room.id : a.localOriginal === room.label;
+    if (!inRoom) return false;
+    if (room.codigo && a.plaqueta.trim() === room.codigo.trim()) return false;
+    return true;
   }).sort((a, b) => a.plaqueta.localeCompare(b.plaqueta, 'pt-BR'));
+
+  const total = roomAssets.length;
+  const conferidos = roomAssets.filter((a) => sessionId && states.get(a.id)?.conferido).length;
+  const pendentes = total - conferidos;
+  const percentual = total === 0 ? 0 : Math.round((conferidos / total) * 100);
 
   const now = formatDateTime(new Date().toISOString());
 
@@ -30,7 +38,7 @@ export function generateRoomPdfReport(data: RoomReportData) {
         header { border-bottom: 2px solid #0f5132; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
         h1 { font-size: 20px; color: #0f5132; margin: 0 0 4px 0; }
         .meta { font-size: 13px; color: #4d6057; }
-        .box { background: #f7faf8; border: 1px solid #e0e8e3; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; }
+        .box { background: #f7faf8; border: 1px solid #e0e8e3; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
         th, td { border: 1px solid #cdd9d2; padding: 8px 10px; text-align: left; }
         th { background: #eef3ef; color: #0f5132; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -65,8 +73,13 @@ export function generateRoomPdfReport(data: RoomReportData) {
       </header>
 
       <div class="box">
-        <p><strong>Responsável pelo Setor:</strong> ${room.responsavel || 'Não informado'}</p>
-        <p><strong>Total de Bens no Cadastro:</strong> ${roomAssets.length}</p>
+        <div>
+          <p><strong>Responsável pelo Setor:</strong> ${room.responsavel || 'Não informado'}</p>
+          <p><strong>Total de Bens (sem reg. sintético):</strong> ${total} · Conferidos: ${conferidos} · Pendentes: ${pendentes}</p>
+        </div>
+        <div style="text-align: right; font-size: 16px;">
+          <strong>Taxa de Cobertura:</strong> <span style="color: #0f5132; font-size: 20px;">${percentual}%</span>
+        </div>
       </div>
 
       <table>
@@ -195,16 +208,19 @@ export function generateResponsiblePdfReport(data: ResponsibleReportData) {
 
   for (const room of assignedRooms) {
     const roomAssets = assets.filter((a) => {
-      if (room.id) return a.roomId === room.id;
-      return a.localOriginal === room.label;
+      const inRoom = room.id ? a.roomId === room.id : a.localOriginal === room.label;
+      if (!inRoom) return false;
+      if (room.codigo && a.plaqueta.trim() === room.codigo.trim()) return false;
+      return true;
     }).sort((a, b) => a.plaqueta.localeCompare(b.plaqueta, 'pt-BR'));
 
     const total = roomAssets.length;
     const conferidos = roomAssets.filter((a) => sessionId && states.get(a.id)?.conferido).length;
     const pendentes = total - conferidos;
+    const percentual = total === 0 ? 0 : Math.round((conferidos / total) * 100);
 
     html += `
-      <h2>Setor: ${room.label} (Total: ${total} bens · Conferidos: ${conferidos} · Pendentes: ${pendentes})</h2>
+      <h2>Setor: ${room.label} (Total: ${total} · Conferidos: ${conferidos} · Pendentes: ${pendentes} · Cobertura: ${percentual}%)</h2>
       <table>
         <thead>
           <tr>

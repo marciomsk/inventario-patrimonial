@@ -20,6 +20,7 @@ export interface RoomInput {
   codigo?: string | null;
   nome?: string | null;
   responsavel?: string | null;
+  relatorioEntregue?: boolean;
 }
 
 function validateCode(value: unknown): string | null {
@@ -124,6 +125,7 @@ export async function ensureRoom(label: string): Promise<Room> {
 export async function createRoom(input: RoomInput): Promise<Room> {
   const fields = buildRoomFields(input);
   const responsavel = cleanText(input.responsavel) || null;
+  const relatorioEntregue = Boolean(input.relatorioEntregue);
 
   return db.transaction('rw', db.rooms, async () => {
     const existing = await db.rooms.where('key').equals(fields.key).first();
@@ -139,11 +141,27 @@ export async function createRoom(input: RoomInput): Promise<Room> {
       label: fields.label,
       aliases: [fields.label],
       responsavel,
+      relatorioEntregue,
       createdAt: now,
       updatedAt: now,
     };
     await db.rooms.add(room);
     return room;
+  });
+}
+
+export async function setRoomRelatorioEntregue(id: string, relatorioEntregue: boolean): Promise<Room> {
+  return db.transaction('rw', db.rooms, async () => {
+    const room = await db.rooms.get(id);
+    if (!room) throw new RoomConflictError('Sala não encontrada.');
+    const now = nowIso();
+    const updated: Room = {
+      ...room,
+      relatorioEntregue,
+      updatedAt: now,
+    };
+    await db.rooms.put(updated);
+    return updated;
   });
 }
 
@@ -190,6 +208,7 @@ export async function updateRoom(id: string, input: RoomInput): Promise<Room> {
         a.localeCompare(b, 'pt-BR'),
       ),
       responsavel,
+      relatorioEntregue: input.relatorioEntregue !== undefined ? Boolean(input.relatorioEntregue) : room.relatorioEntregue,
       updatedAt: now,
     };
     await db.rooms.put(next);
