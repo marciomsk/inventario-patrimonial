@@ -43,7 +43,7 @@ describe.skipIf(!available)('planilha real de referência', () => {
     expect(preview.summary.eventDuplicateIds).toBe(29);
     // A contagem de datas futuras depende do relógio do dia da execução
     // (a planilha tem leituras até 2027-01-18).
-    expect(preview.summary.futureEvents).toBeGreaterThanOrEqual(575);
+    expect(preview.summary.futureEvents).toBeGreaterThanOrEqual(570);
     expect(preview.summary.futureEvents).toBeLessThanOrEqual(585);
     expect(preview.summary.notInCadastro).toBe(1076);
     expect(preview.summary.divergenceEvents).toBe(526);
