@@ -12,7 +12,6 @@ export interface RoomReportData {
 export function generateRoomPdfReport(data: RoomReportData) {
   const { room, assets, states, sessionId } = data;
   
-  // Filtra bens da sala, removendo o registo sintético/fictício cuja plaqueta seja igual ao código da sala
   const roomAssets = assets.filter((a) => {
     const inRoom = room.id ? a.roomId === room.id : a.localOriginal === room.label;
     if (!inRoom) return false;
@@ -20,8 +19,10 @@ export function generateRoomPdfReport(data: RoomReportData) {
     return true;
   }).sort((a, b) => a.plaqueta.localeCompare(b.plaqueta, 'pt-BR'));
 
-  const total = roomAssets.length;
-  const conferidos = roomAssets.filter((a) => sessionId && states.get(a.id)?.conferido).length;
+  const activeAssets = roomAssets.filter((a) => !a.baixado);
+  const baixadosCount = roomAssets.filter((a) => a.baixado).length;
+  const total = activeAssets.length;
+  const conferidos = activeAssets.filter((a) => sessionId && states.get(a.id)?.conferido).length;
   const pendentes = total - conferidos;
   const percentual = total === 0 ? 0 : Math.round((conferidos / total) * 100);
 
@@ -45,10 +46,12 @@ export function generateRoomPdfReport(data: RoomReportData) {
         tr.pendente { background: #fdeaea; }
         tr.divergente { background: #fdf3dc; }
         tr.conferido { background: #eef7f1; }
+        tr.baixado { background: #edf2f7; color: #718096; }
         .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .badge-pendente { background: #fdeaea; color: #9b1c1c; }
         .badge-conferido { background: #dcefe3; color: #0f5132; }
         .badge-divergente { background: #fdf3dc; color: #92610a; }
+        .badge-baixado { background: #e2e8f0; color: #4a5568; }
         .signatures { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
         .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 13px; }
         @media print {
@@ -75,7 +78,7 @@ export function generateRoomPdfReport(data: RoomReportData) {
       <div class="box">
         <div>
           <p><strong>Responsável pelo Setor:</strong> ${room.responsavel || 'Não informado'}</p>
-          <p><strong>Total de Bens (sem reg. sintético):</strong> ${total} · Conferidos: ${conferidos} · Pendentes: ${pendentes}</p>
+          <p><strong>Bens Ativos:</strong> ${total} · Conferidos: ${conferidos} · Pendentes: ${pendentes} ${baixadosCount > 0 ? `· Baixados: ${baixadosCount}` : ''}</p>
         </div>
         <div style="text-align: right; font-size: 16px;">
           <strong>Taxa de Cobertura:</strong> <span style="color: #0f5132; font-size: 20px;">${percentual}%</span>
@@ -88,7 +91,7 @@ export function generateRoomPdfReport(data: RoomReportData) {
             <th>Plaqueta</th>
             <th>Descrição do Bem</th>
             <th>Situação / Status</th>
-            <th>Observações</th>
+            <th>Observações / Baixa</th>
           </tr>
         </thead>
         <tbody>
@@ -101,8 +104,14 @@ export function generateRoomPdfReport(data: RoomReportData) {
     let statusClass = 'pendente';
     let badgeText = 'PENDENTE';
     let badgeClass = 'badge-pendente';
+    let obsText = asset.observacao ?? '';
 
-    if (conferido) {
+    if (asset.baixado) {
+      statusClass = 'baixado';
+      badgeText = 'BAIXADO';
+      badgeClass = 'badge-baixado';
+      obsText = asset.motivoBaixa ? `Baixado: ${asset.motivoBaixa}` : 'Baixado';
+    } else if (conferido) {
       if (divergente) {
         statusClass = 'divergente';
         badgeText = 'DIVERGENTE';
@@ -119,7 +128,7 @@ export function generateRoomPdfReport(data: RoomReportData) {
         <td style="font-family: monospace; font-weight: bold;">${asset.plaqueta}</td>
         <td>${asset.descricao || 'Sem descrição'}</td>
         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-        <td>${asset.observacao ?? ''}</td>
+        <td>${obsText}</td>
       </tr>
     `;
   }
@@ -182,6 +191,7 @@ export function generateResponsiblePdfReport(data: ResponsibleReportData) {
         .badge-pendente { background: #fdeaea; color: #9b1c1c; }
         .badge-conferido { background: #dcefe3; color: #0f5132; }
         .badge-divergente { background: #fdf3dc; color: #92610a; }
+        .badge-baixado { background: #e2e8f0; color: #4a5568; }
         .signatures { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
         .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 13px; }
         @media print {
@@ -214,13 +224,14 @@ export function generateResponsiblePdfReport(data: ResponsibleReportData) {
       return true;
     }).sort((a, b) => a.plaqueta.localeCompare(b.plaqueta, 'pt-BR'));
 
-    const total = roomAssets.length;
-    const conferidos = roomAssets.filter((a) => sessionId && states.get(a.id)?.conferido).length;
+    const activeRoomAssets = roomAssets.filter((a) => !a.baixado);
+    const total = activeRoomAssets.length;
+    const conferidos = activeRoomAssets.filter((a) => sessionId && states.get(a.id)?.conferido).length;
     const pendentes = total - conferidos;
     const percentual = total === 0 ? 0 : Math.round((conferidos / total) * 100);
 
     html += `
-      <h2>Setor: ${room.label} (Total: ${total} · Conferidos: ${conferidos} · Pendentes: ${pendentes} · Cobertura: ${percentual}%)</h2>
+      <h2>Setor: ${room.label} (Ativos: ${total} · Conferidos: ${conferidos} · Pendentes: ${pendentes} · Cobertura: ${percentual}%)</h2>
       <table>
         <thead>
           <tr>
@@ -239,8 +250,13 @@ export function generateResponsiblePdfReport(data: ResponsibleReportData) {
       const divergente = state?.divergente ?? false;
       let badgeText = 'PENDENTE';
       let badgeClass = 'badge-pendente';
+      let obsText = asset.observacao ?? '';
 
-      if (conferido) {
+      if (asset.baixado) {
+        badgeText = 'BAIXADO';
+        badgeClass = 'badge-baixado';
+        obsText = asset.motivoBaixa ? `Baixado: ${asset.motivoBaixa}` : 'Baixado';
+      } else if (conferido) {
         if (divergente) {
           badgeText = 'DIVERGENTE';
           badgeClass = 'badge-divergente';
@@ -255,7 +271,7 @@ export function generateResponsiblePdfReport(data: ResponsibleReportData) {
           <td style="font-family: monospace; font-weight: bold;">${asset.plaqueta}</td>
           <td>${asset.descricao || 'Sem descrição'}</td>
           <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-          <td>${asset.observacao ?? ''}</td>
+          <td>${obsText}</td>
         </tr>
       `;
     }

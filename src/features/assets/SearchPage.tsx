@@ -161,11 +161,18 @@ export function SearchPage() {
                     <span className="detail__code">{selected.plaqueta}</span>
                     <h3>{selected.descricao || 'Sem descrição'}</h3>
                   </div>
+                  {selected.baixado ? <Badge tone="danger">Baixado</Badge> : null}
                   {selected.revisaoPendente ? <Badge tone="warning">Revisão</Badge> : null}
                   {selected.isManualRegister ? <Badge tone="info">Item novo</Badge> : null}
                 </div>
 
                 <dl className="kv">
+                  {selected.baixado && selected.motivoBaixa ? (
+                    <div>
+                      <dt>Motivo da baixa</dt>
+                      <dd style={{ color: '#9b1c1c', fontWeight: 'bold' }}>{selected.motivoBaixa}</dd>
+                    </div>
+                  ) : null}
                   <div>
                     <dt>Local no cadastro</dt>
                     <dd>{roomLabel(selected.localOriginal) || 'Sem local'}</dd>

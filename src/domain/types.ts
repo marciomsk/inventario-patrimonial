@@ -63,6 +63,10 @@ export interface Asset {
   ativo: boolean;
   /** Bem cadastrado manualmente em campo (não existia na carga original). */
   isManualRegister: boolean;
+  /** Indica se o bem sofreu baixa patrimonial (inativado). */
+  baixado?: boolean;
+  dataBaixa?: IsoDateTime | null;
+  motivoBaixa?: string | null;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
 }

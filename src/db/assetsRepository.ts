@@ -123,55 +123,42 @@ function reviewReasons(
  * alterado: os eventos continuam com a plaqueta e a sala do momento da
  * leitura. Só bloqueia quando a nova plaqueta já pertence a outro bem.
  */
-export async function updateAsset(assetId: string, input: AssetEditInput): Promise<Asset> {
-  const plaqueta = normalizePlaqueta(input.plaqueta);
-  if (!plaqueta) throw new AssetValidationError('Informe a plaqueta do bem.');
-  const key = plaquetaKey(plaqueta);
-  const descricao = cleanText(input.descricao);
-  const observacao = cleanText(input.observacao) || null;
-  const statusCadastro = cleanText(input.statusCadastro);
+export async function writeOffAsset(assetId: string, motivoBaixa: string): Promise<Asset> {
+  const motivo = cleanText(motivoBaixa);
+  if (!motivo) throw new AssetValidationError('Informe o motivo da baixa patrimonial.');
+  const now = nowIso();
 
-  return db.transaction('rw', db.assets, db.rooms, async () => {
+  return db.transaction('rw', db.assets, async () => {
     const asset = await db.assets.get(assetId);
     if (!asset) throw new AssetValidationError('Bem não encontrado no cadastro local.');
 
-    const keyChanged = key !== asset.plaquetaKey;
-    if (keyChanged) {
-      const duplicates = await db.assets.where('plaquetaKey').equals(key).toArray();
-      if (duplicates.some((candidate) => candidate.id !== assetId)) {
-        throw new DuplicateAssetError(plaqueta);
-      }
-    }
+    const next: Asset = {
+      ...asset,
+      baixado: true,
+      ativo: false,
+      motivoBaixa: motivo,
+      dataBaixa: now,
+      updatedAt: now,
+    };
+    await db.assets.put(next);
+    return next;
+  });
+}
 
-    const room = input.roomId ? await db.rooms.get(input.roomId) : null;
-    if (input.roomId && !room) {
-      throw new AssetValidationError('Sala selecionada não encontrada no cadastro local.');
-    }
+export async function reactivateAsset(assetId: string): Promise<Asset> {
+  const now = nowIso();
 
-    const base = asset.revisaoMotivos.filter((motivo) =>
-      keyChanged ? motivo !== 'plaqueta_duplicada' : true,
-    );
-    const motivos = new Set(reviewReasons(base, plaqueta, descricao, room?.label ?? ''));
-    if (!keyChanged) {
-      const sameKey = await db.assets.where('plaquetaKey').equals(key).count();
-      if (sameKey > 1) motivos.add('plaqueta_duplicada');
-      else motivos.delete('plaqueta_duplicada');
-    }
+  return db.transaction('rw', db.assets, async () => {
+    const asset = await db.assets.get(assetId);
+    if (!asset) throw new AssetValidationError('Bem não encontrado no cadastro local.');
 
     const next: Asset = {
       ...asset,
-      plaqueta,
-      plaquetaKey: key,
-      descricao,
-      localOriginal: room?.label ?? '',
-      localCodigo: room?.codigo ?? null,
-      localNome: room?.nome ?? '',
-      roomId: room?.id ?? null,
-      statusCadastro,
-      observacao,
-      revisaoMotivos: [...motivos],
-      revisaoPendente: motivos.size > 0,
-      updatedAt: nowIso(),
+      baixado: false,
+      ativo: true,
+      motivoBaixa: null,
+      dataBaixa: null,
+      updatedAt: now,
     };
     await db.assets.put(next);
     return next;

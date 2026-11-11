@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Modal } from '../../components/Modal';
 import { Button } from '../../components/Button';
 import { useToast } from '../../app/ToastContext';
-import { createManualAsset, updateAsset } from '../../db/assetsRepository';
+import { createManualAsset, updateAsset, writeOffAsset, reactivateAsset } from '../../db/assetsRepository';
 import type { Asset, Room } from '../../domain/types';
 
 interface AssetFormModalProps {
@@ -43,9 +43,12 @@ function AssetFormContent({
   );
   const [situacao, setSituacao] = useState(asset?.statusCadastro ?? 'Cadastrado em campo');
   const [observacao, setObservacao] = useState(asset?.observacao ?? '');
+  const [motivoBaixa, setMotivoBaixa] = useState('');
+  const [showWriteOffInput, setShowWriteOffInput] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const isCreate = Boolean(create);
+  const isBaixado = Boolean(asset?.baixado);
 
   const sortedRooms = useMemo(
     () =>
@@ -93,6 +96,40 @@ function AssetFormContent({
       onClose();
     } catch (error) {
       push(error instanceof Error ? error.message : 'Falha ao salvar o bem.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleWriteOff() {
+    if (!asset) return;
+    if (!motivoBaixa.trim()) {
+      push('Informe o motivo da baixa patrimonial.', 'warning');
+      return;
+    }
+    setSaving(true);
+    try {
+      const saved = await writeOffAsset(asset.id, motivoBaixa);
+      push('Baixa patrimonial realizada. O bem foi inativado e removido das pendências.', 'success');
+      onSaved?.(saved);
+      onClose();
+    } catch (error) {
+      push(error instanceof Error ? error.message : 'Falha ao dar baixa no bem.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleReactivate() {
+    if (!asset) return;
+    setSaving(true);
+    try {
+      const saved = await reactivateAsset(asset.id);
+      push('Bem reativado com sucesso.', 'success');
+      onSaved?.(saved);
+      onClose();
+    } catch (error) {
+      push(error instanceof Error ? error.message : 'Falha ao reativar o bem.', 'error');
     } finally {
       setSaving(false);
     }
@@ -175,6 +212,53 @@ function AssetFormContent({
             placeholder="Ex.: etiqueta danificada, item encontrado sem plaqueta..."
           />
         </label>
+
+        {!isCreate && asset ? (
+          <div style={{ marginTop: '16px', borderTop: '1px solid #e0e8e3', paddingTop: '16px' }}>
+            {isBaixado ? (
+              <div style={{ background: '#fdeaea', border: '1px solid #f5c6cb', padding: '12px', borderRadius: '8px', color: '#9b1c1c' }}>
+                <p><strong>⚠️ Este bem está BAIXADO (Inativo).</strong></p>
+                {asset.motivoBaixa ? <p><strong>Motivo:</strong> {asset.motivoBaixa}</p> : null}
+                <div style={{ marginTop: '8px' }}>
+                  <Button variant="secondary" size="sm" disabled={saving} onClick={handleReactivate}>
+                    Reativar patrimônio
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {!showWriteOffInput ? (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setShowWriteOffInput(true)}
+                  >
+                    Dar baixa patrimonial...
+                  </Button>
+                ) : (
+                  <div style={{ background: '#fdf3dc', border: '1px solid #ffeeba', padding: '12px', borderRadius: '8px' }}>
+                    <label className="field">
+                      <span>Motivo da baixa / inativação</span>
+                      <input
+                        value={motivoBaixa}
+                        onChange={(e) => setMotivoBaixa(e.target.value)}
+                        placeholder="Ex.: Obsoleto, danificado, extraviado, alienado..."
+                      />
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                      <Button variant="danger" size="sm" disabled={saving} onClick={handleWriteOff}>
+                        Confirmar baixa
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => setShowWriteOffInput(false)}>
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
     </Modal>
   );
