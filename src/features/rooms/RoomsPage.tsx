@@ -215,11 +215,15 @@ export function RoomsPage() {
                     ? roomList.find((r) => r.id === room.roomId) ?? null
                     : roomList.find((r) => r.label === room.local) ?? null;
                   const entregue = Boolean(registryRoom?.relatorioEntregue);
+                  const isConcluida = room.pendentes === 0 && room.total > 0;
 
                   return (
                     <tr
                       key={key}
                       className={selectedKey === key ? 'is-selected' : ''}
+                      style={{
+                        backgroundColor: isConcluida ? 'rgba(220, 239, 227, 0.7)' : undefined,
+                      }}
                       onClick={() => setSelectedKey(key === selectedKey ? null : key)}
                     >
                       <td>
