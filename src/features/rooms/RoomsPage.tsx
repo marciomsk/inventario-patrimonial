@@ -15,24 +15,47 @@ import { RoomFormModal } from './RoomFormModal';
 import type { Room } from '../../domain/types';
 
 export function RoomsPage() {
-  const { assets, rooms, roomList, states, summary, loading } = useInventoryData();
+  const { assets, rooms, roomList, states, loading } = useInventoryData();
   const { push } = useToast();
   const [term, setTerm] = useState('');
+  const [filialFilter, setFilialFilter] = useState<'Todas' | 'Filial 1' | 'Filial 2'>('Todas');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
 
+  const roomsWithFilial = useMemo(() => {
+    return rooms.map((r) => {
+      const reg = r.roomId
+        ? roomList.find((item) => item.id === r.roomId)
+        : roomList.find((item) => item.label === r.local);
+      const filial = reg?.filial ?? 'Filial 1';
+      return { ...r, registryRoom: reg ?? null, filial };
+    });
+  }, [rooms, roomList]);
+
+  const filteredByFilial = useMemo(() => {
+    if (filialFilter === 'Todas') return roomsWithFilial;
+    return roomsWithFilial.filter((r) => r.filial === filialFilter);
+  }, [roomsWithFilial, filialFilter]);
+
   const filtered = useMemo(() => {
     const clean = normalizeRoomName(term);
-    if (!clean) return rooms;
-    return rooms.filter(
+    if (!clean) return filteredByFilial;
+    return filteredByFilial.filter(
       (room) =>
         normalizeRoomName(room.local).includes(clean) ||
         normalizeRoomName(room.nome).includes(clean) ||
         (room.codigo ?? '').includes(term.trim()) ||
         room.aliases.some((alias) => normalizeRoomName(alias).includes(clean)),
     );
-  }, [rooms, term]);
+  }, [filteredByFilial, term]);
+
+  const summaryRooms = filteredByFilial;
+  const pendentesCount = summaryRooms.filter((room) => room.pendentes > 0).length;
+  const concluidasCount = summaryRooms.filter((room) => room.pendentes === 0 && room.total > 0).length;
+  const totalItensSum = summaryRooms.reduce((acc, r) => acc + r.total, 0);
+  const confItensSum = summaryRooms.reduce((acc, r) => acc + r.conferidos, 0);
+  const filialPercent = totalItensSum === 0 ? 0 : confItensSum / totalItensSum;
 
   const selectedRoom = rooms.find(
     (room) => (room.roomId ?? `local:${room.local}`) === selectedKey,
@@ -93,35 +116,57 @@ export function RoomsPage() {
       <div className="stats-grid stats-grid--compact">
         <StatCard
           label="Salas com pendências"
-          value={formatNumber(rooms.filter((room) => room.pendentes > 0).length)}
+          value={formatNumber(pendentesCount)}
           icon="building"
           tone="warning"
         />
         <StatCard
           label="Salas concluídas"
-          value={formatNumber(rooms.filter((room) => room.pendentes === 0 && room.total > 0).length)}
+          value={formatNumber(concluidasCount)}
           icon="check"
           tone="success"
         />
         <StatCard
           label="Grafias unificadas"
           value={formatNumber(
-            rooms.reduce((total, room) => total + Math.max(0, room.aliases.length - 1), 0),
+            summaryRooms.reduce((total, room) => total + Math.max(0, room.aliases.length - 1), 0),
           )}
           icon="refresh"
           tone="info"
         />
         <StatCard
           label="Progresso geral"
-          value={formatPercent(summary.percentual)}
+          value={formatPercent(filialPercent)}
           icon="dashboard"
           tone="info"
         />
       </div>
 
       <Card>
-        <div className="filters">
-          <label className="search-input search-input--sm">
+        <div className="filters" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {(['Todas', 'Filial 1', 'Filial 2'] as const).map((fil) => (
+              <button
+                key={fil}
+                type="button"
+                className={`btn btn--sm ${filialFilter === fil ? 'btn--primary' : 'btn--secondary'}`}
+                style={{
+                  background: filialFilter === fil ? '#0f5132' : '#eef3ef',
+                  color: filialFilter === fil ? '#fff' : '#14211b',
+                  border: '1px solid #cdd9d2',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setFilialFilter(fil)}
+              >
+                {fil}
+              </button>
+            ))}
+          </div>
+
+          <label className="search-input search-input--sm" style={{ flex: 1, minWidth: '220px' }}>
             <Icon name="search" size={18} />
             <input
               value={term}
@@ -179,7 +224,14 @@ export function RoomsPage() {
                     >
                       <td>
                         <div className="room-cell">
-                          <strong>{room.codigo ?? '—'}</strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <strong>{room.codigo ?? '—'}</strong>
+                            {room.filial === 'Filial 2' ? (
+                              <Badge tone="info">Filial 2</Badge>
+                            ) : (
+                              <Badge tone="neutral">Filial 1</Badge>
+                            )}
+                          </div>
                           <span>{room.nome}</span>
                           {registryRoom?.responsavel ? (
                             <span style={{ fontSize: '12px', color: '#166941', fontWeight: 600 }}>

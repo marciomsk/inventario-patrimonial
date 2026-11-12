@@ -20,6 +20,7 @@ export interface RoomInput {
   codigo?: string | null;
   nome?: string | null;
   responsavel?: string | null;
+  filial?: string | null;
   relatorioEntregue?: boolean;
   enviadoAoResponsavel?: boolean;
 }
@@ -126,6 +127,7 @@ export async function ensureRoom(label: string): Promise<Room> {
 export async function createRoom(input: RoomInput): Promise<Room> {
   const fields = buildRoomFields(input);
   const responsavel = cleanText(input.responsavel) || null;
+  const filial = cleanText(input.filial) || 'Filial 1';
   const entregue = Boolean(input.relatorioEntregue || input.enviadoAoResponsavel);
   const now = nowIso();
 
@@ -142,6 +144,7 @@ export async function createRoom(input: RoomInput): Promise<Room> {
       label: fields.label,
       aliases: [fields.label],
       responsavel,
+      filial,
       relatorioEntregue: entregue,
       enviadoAoResponsavel: entregue,
       dataEnvio: entregue ? now : null,
@@ -203,6 +206,7 @@ export async function updateRoom(id: string, input: RoomInput): Promise<Room> {
     }
 
     const now = nowIso();
+    const filial = cleanText(input.filial) || room.filial || 'Filial 1';
     const nextEntregue =
       input.relatorioEntregue !== undefined
         ? Boolean(input.relatorioEntregue)
@@ -220,6 +224,7 @@ export async function updateRoom(id: string, input: RoomInput): Promise<Room> {
         a.localeCompare(b, 'pt-BR'),
       ),
       responsavel,
+      filial,
       relatorioEntregue: nextEntregue,
       enviadoAoResponsavel: nextEntregue,
       dataEnvio: nextEntregue ? (room.dataEnvio ?? now) : null,

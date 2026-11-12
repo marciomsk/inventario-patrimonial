@@ -30,6 +30,8 @@ export interface Room {
   aliases: string[];
   /** Responsável pelo setor / sala. */
   responsavel?: string | null;
+  /** Filial à qual a sala pertence ('Filial 1' ou 'Filial 2'). */
+  filial?: string | null;
   /** Indica se o relatório de inventário foi entregue ao responsável. */
   relatorioEntregue?: boolean;
   /** Sinônimo / campo de controle de envio ao responsável. */

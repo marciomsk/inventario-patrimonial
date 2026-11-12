@@ -22,14 +22,15 @@ function RoomFormContent({ open, room, onClose, onSaved }: RoomFormModalProps) {
   const [codigo, setCodigo] = useState(room?.codigo ?? '');
   const [nome, setNome] = useState(room?.nome ?? '');
   const [responsavel, setResponsavel] = useState(room?.responsavel ?? '');
+  const [filial, setFilial] = useState(room?.filial ?? 'Filial 1');
   const [saving, setSaving] = useState(false);
 
   async function save() {
     setSaving(true);
     try {
       const saved = room
-        ? await updateRoom(room.id, { codigo, nome, responsavel })
-        : await createRoom({ codigo, nome, responsavel });
+        ? await updateRoom(room.id, { codigo, nome, responsavel, filial })
+        : await createRoom({ codigo, nome, responsavel, filial });
       push(
         room
           ? 'Sala atualizada. O local dos bens vinculados foi atualizado em cascata.'
@@ -85,6 +86,13 @@ function RoomFormContent({ open, room, onClose, onSaved }: RoomFormModalProps) {
             placeholder="Ex.: PRAIA PARK - CASCATAS"
             autoComplete="off"
           />
+        </label>
+        <label className="field">
+          <span>Filial</span>
+          <select value={filial} onChange={(event) => setFilial(event.target.value)}>
+            <option value="Filial 1">Filial 1</option>
+            <option value="Filial 2">Filial 2</option>
+          </select>
         </label>
         <label className="field">
           <span>Responsável do setor</span>

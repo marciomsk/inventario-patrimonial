@@ -26,7 +26,7 @@ import {
   exportSobrasXlsx,
   exportTransfersXlsx,
 } from '../../services/exportXlsx';
-import { generateRoomPdfReport, generateResponsiblePdfReport } from '../../services/pdfReport';
+import { generateRoomPdfReport, generateResponsiblePdfReport, generateFilialPdfReport } from '../../services/pdfReport';
 import { listTransferRequests } from '../../db/transferRepository';
 import { formatDateTime, formatNumber } from '../../domain/format';
 
@@ -40,8 +40,10 @@ export function ExportPage() {
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [roomSearchTerm, setRoomSearchTerm] = useState('');
   const [roomResponsavelInput, setRoomResponsavelInput] = useState('');
+  const [roomFilialInput, setRoomFilialInput] = useState('Filial 1');
   const [roomEntregueInput, setRoomEntregueInput] = useState(false);
   const [selectedResponsible, setSelectedResponsible] = useState('');
+  const [selectedFilial, setSelectedFilial] = useState('Filial 1');
 
   const sessionId = session?.id ?? null;
 
@@ -53,9 +55,11 @@ export function ExportPage() {
   useEffect(() => {
     if (selectedRoom) {
       setRoomResponsavelInput(selectedRoom.responsavel ?? '');
+      setRoomFilialInput(selectedRoom.filial ?? 'Filial 1');
       setRoomEntregueInput(Boolean(selectedRoom.relatorioEntregue));
     } else {
       setRoomResponsavelInput('');
+      setRoomFilialInput('Filial 1');
       setRoomEntregueInput(false);
     }
   }, [selectedRoom]);
@@ -315,6 +319,31 @@ export function ExportPage() {
             {selectedRoom ? (
               <div className="box" style={{ background: '#f7faf8', padding: '12px', borderRadius: '8px', border: '1px solid #e0e8e3' }}>
                 <label className="field" style={{ marginBottom: '10px' }}>
+                  <span>Filial da Sala</span>
+                  <select
+                    value={roomFilialInput}
+                    onChange={async (e) => {
+                      const val = e.target.value;
+                      setRoomFilialInput(val);
+                      try {
+                        await updateRoom(selectedRoom.id, {
+                          codigo: selectedRoom.codigo,
+                          nome: selectedRoom.nome,
+                          responsavel: roomResponsavelInput,
+                          filial: val,
+                        });
+                        push('Filial atualizada com sucesso.', 'success');
+                      } catch (err) {
+                        push('Erro ao atualizar filial.', 'error');
+                      }
+                    }}
+                  >
+                    <option value="Filial 1">Filial 1</option>
+                    <option value="Filial 2">Filial 2</option>
+                  </select>
+                </label>
+
+                <label className="field" style={{ marginBottom: '10px' }}>
                   <span>Vincular / Alterar Responsável</span>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input
@@ -331,6 +360,7 @@ export function ExportPage() {
                             codigo: selectedRoom.codigo,
                             nome: selectedRoom.nome,
                             responsavel: roomResponsavelInput,
+                            filial: roomFilialInput,
                           });
                           push('Responsável atualizado com sucesso.', 'success');
                         } catch (err) {
@@ -375,6 +405,42 @@ export function ExportPage() {
               }}
             >
               Gerar PDF da sala
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="export-card">
+          <CardHeader
+            title="Relatório PDF por Filial"
+            subtitle="Consolidado de todas as salas pertencentes à filial"
+            icon="building"
+          />
+          <div className="form-stack">
+            <select
+              value={selectedFilial}
+              onChange={(e) => setSelectedFilial(e.target.value)}
+              className="field"
+            >
+              <option value="Filial 1">Filial 1</option>
+              <option value="Filial 2">Filial 2</option>
+              <option value="Todas">Todas as Filiais</option>
+            </select>
+            <Button
+              variant="primary"
+              icon="download"
+              onClick={() => {
+                generateFilialPdfReport({
+                  filial: selectedFilial,
+                  rooms: roomList,
+                  assets,
+                  states,
+                  events,
+                  sessionId,
+                });
+                push(`Relatório consolidado da ${selectedFilial} aberto para impressão.`, 'success');
+              }}
+            >
+              Gerar PDF por filial
             </Button>
           </div>
         </Card>
