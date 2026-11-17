@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { Modal } from '../../components/Modal';
 import { Button } from '../../components/Button';
 import { useToast } from '../../app/ToastContext';
 import { createManualAsset, updateAsset, writeOffAsset, reactivateAsset } from '../../db/assetsRepository';
+import { getMaintenanceHistory } from '../../db/maintenanceRepository';
 import type { Asset, Room } from '../../domain/types';
 
 interface AssetFormModalProps {
@@ -36,6 +39,7 @@ function AssetFormContent({
   onSaved,
 }: AssetFormModalProps) {
   const { push } = useToast();
+  const navigate = useNavigate();
   const [plaqueta, setPlaqueta] = useState(asset?.plaqueta ?? '');
   const [descricao, setDescricao] = useState(asset?.descricao ?? '');
   const [roomId, setRoomId] = useState(
@@ -46,6 +50,13 @@ function AssetFormContent({
   const [motivoBaixa, setMotivoBaixa] = useState('');
   const [showWriteOffInput, setShowWriteOffInput] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const history = useLiveQuery(
+    async () => (asset ? getMaintenanceHistory(asset.plaqueta) : []),
+    [asset],
+  ) ?? [];
+
+  const totalSpent = history.reduce((sum, m) => sum + m.valorOrcado, 0);
 
   const isCreate = Boolean(create);
   const isBaixado = Boolean(asset?.baixado);
@@ -215,6 +226,22 @@ function AssetFormContent({
 
         {!isCreate && asset ? (
           <div style={{ marginTop: '16px', borderTop: '1px solid #e0e8e3', paddingTop: '16px' }}>
+            <div style={{ background: '#eef3ef', padding: '12px', borderRadius: '8px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <strong>Histórico de Manutenções:</strong> {history.length} conserto(s) · Gasto total: <strong>R$ {totalSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+              </div>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  onClose();
+                  navigate('/manutencao');
+                }}
+              >
+                Solicitar manutenção
+              </Button>
+            </div>
+
             {isBaixado ? (
               <div style={{ background: '#fdeaea', border: '1px solid #f5c6cb', padding: '12px', borderRadius: '8px', color: '#9b1c1c' }}>
                 <p><strong>⚠️ Este bem está BAIXADO (Inativo).</strong></p>

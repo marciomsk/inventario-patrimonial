@@ -7,6 +7,7 @@ import type {
   ImportBatch,
   InventoryEvent,
   InventorySession,
+  Maintenance,
   Room,
   SettingRow,
   SyncQueueItem,
@@ -22,6 +23,7 @@ export class InventarioDatabase extends Dexie {
   transferRequests!: Table<TransferRequest, string>;
   syncQueue!: Table<SyncQueueItem, string>;
   rooms!: Table<Room, string>;
+  maintenances!: Table<Maintenance, string>;
 
   constructor(name = 'inventario-patrimonial') {
     super(name);
@@ -135,6 +137,21 @@ export class InventarioDatabase extends Dexie {
           event.roomId = room?.id ?? null;
         });
       });
+
+    // v4: adiciona a tabela de manutenções (VMME110).
+    this.version(4).stores({
+      assets:
+        'id, plaquetaKey, localOriginal, localCodigo, importBatchId, legacyStatus, roomId',
+      events:
+        'id, plaquetaKey, assetId, dataHora, inventorySessionId, resultado, legacyEventId, roomId, [inventorySessionId+resultado], [inventorySessionId+plaquetaKey], [inventorySessionId+assetId]',
+      sessions: 'id, status, startedAt',
+      settings: 'key',
+      importBatches: 'id, startedAt, status, origem',
+      transferRequests: 'id, assetId, status, dataHora',
+      syncQueue: 'id, status, createdAt, [entity+entityId]',
+      rooms: 'id, key, codigo, label',
+      maintenances: 'id, assetId, plaqueta, status, dataSolicitacao, numeroDocumento',
+    });
   }
 }
 

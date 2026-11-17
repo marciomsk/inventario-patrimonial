@@ -15,8 +15,13 @@ import {
   type LegacyImportPreview,
 } from '../../services/import/legacyImport';
 import { applyLegacyImport, type ImportProgress } from '../../services/import/applyLegacyImport';
-import { formatFileSize, formatNumber } from '../../domain/format';
+import {
+  parseSeniorMaintenanceCsv,
+  applySeniorMaintenanceImport,
+  type SeniorImportPreview,
+} from '../../services/import/seniorMaintenanceImport';
 import { roomLabel } from '../../domain/plaqueta';
+import { formatFileSize, formatNumber } from '../../domain/format';
 
 const ISSUE_LABELS: Record<string, string> = {
   asset_sem_plaqueta: 'Bem sem plaqueta (ignorado)',
@@ -40,6 +45,45 @@ export function ImportPage() {
   const [clearOpen, setClearOpen] = useState(false);
   const [clearConfirm, setClearConfirm] = useState('');
 
+  const seniorInputRef = useRef<HTMLInputElement>(null);
+  const [seniorFileName, setSeniorFileName] = useState<string | null>(null);
+  const [seniorPreview, setSeniorPreview] = useState<SeniorImportPreview | null>(null);
+  const [inspectingSenior, setInspectingSenior] = useState(false);
+  const [applyingSenior, setApplyingSenior] = useState(false);
+  const [seniorDone, setSeniorDone] = useState<number | null>(null);
+
+  async function handleSeniorFile(file: File | undefined) {
+    if (!file) return;
+    setSeniorFileName(file.name);
+    setInspectingSenior(true);
+    setSeniorDone(null);
+    try {
+      const buffer = await file.arrayBuffer();
+      const result = await parseSeniorMaintenanceCsv(buffer, file.name);
+      setSeniorPreview(result);
+      push('Prévia de manutenções gerada com sucesso.', 'success');
+    } catch (caught) {
+      push(caught instanceof Error ? caught.message : 'Falha ao ler o arquivo CSV da Senior.', 'error');
+    } finally {
+      setInspectingSenior(false);
+      if (seniorInputRef.current) seniorInputRef.current.value = '';
+    }
+  }
+
+  async function applySenior() {
+    if (!seniorPreview) return;
+    setApplyingSenior(true);
+    try {
+      const count = await applySeniorMaintenanceImport(seniorPreview);
+      setSeniorDone(count);
+      setSeniorPreview(null);
+      push(`${count} manutenções importadas com sucesso.`, 'success');
+    } catch (caught) {
+      push(caught instanceof Error ? caught.message : 'Falha ao aplicar importação de manutenções.', 'error');
+    } finally {
+      setApplyingSenior(false);
+    }
+  }
   const stored = useLiveQuery(
     async () => ({
       assets: await db.assets.count(),
@@ -257,6 +301,64 @@ export function ImportPage() {
             </>
           ) : null}
         </Card>
+
+        <div style={{ marginTop: '20px' }}>
+          <Card className="import-grid__main">
+            <CardHeader title="Importar Histórico de Manutenções (VMME110.CSV — Senior)" icon="upload" />
+            <input
+              ref={seniorInputRef}
+              type="file"
+              accept=".csv"
+              className="sr-only"
+              onChange={(e) => void handleSeniorFile(e.target.files?.[0])}
+            />
+            <button
+              type="button"
+              className="dropzone"
+              onClick={() => seniorInputRef.current?.click()}
+              disabled={inspectingSenior || applyingSenior}
+            >
+              <span className="dropzone__icon">
+                <Icon name="file" size={28} />
+              </span>
+              <span className="dropzone__title">
+                {seniorFileName ?? 'Clique para selecionar o relatório VMME110.CSV'}
+              </span>
+              <span className="dropzone__subtitle">
+                Encoding Windows-1252 nativo com detecção e concatenação de linhas quebradas
+              </span>
+            </button>
+
+            {seniorDone !== null ? (
+              <div className="alert alert--success" style={{ marginTop: '16px' }}>
+                <Icon name="check" size={18} />
+                <div>
+                  <strong>Importação de manutenções concluída</strong>
+                  <span>{formatNumber(seniorDone)} registros importados com sucesso para a base local.</span>
+                </div>
+              </div>
+            ) : null}
+
+            {seniorPreview ? (
+              <div style={{ marginTop: '16px' }} className="form-stack">
+                <div className="box" style={{ background: '#f7faf8', padding: '12px', borderRadius: '8px' }}>
+                  <p><strong>Arquivo:</strong> {seniorPreview.fileName} ({formatFileSize(seniorPreview.fileSize)})</p>
+                  <p><strong>Linhas lidas:</strong> {formatNumber(seniorPreview.summary.totalRows)}</p>
+                  <p><strong>Novas manutenções para importar:</strong> {formatNumber(seniorPreview.summary.imported)}</p>
+                  <p><strong>Duplicidades ignoradas:</strong> {formatNumber(seniorPreview.summary.duplicates)}</p>
+                </div>
+                <Button
+                  variant="primary"
+                  icon="upload"
+                  disabled={applyingSenior || seniorPreview.summary.imported === 0}
+                  onClick={applySenior}
+                >
+                  {applyingSenior ? 'Importando...' : 'Confirmar importação de manutenções'}
+                </Button>
+              </div>
+            ) : null}
+          </Card>
+        </div>
 
         <aside className="import-grid__side">
           <Card>

@@ -34,6 +34,9 @@ const ExportPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('../features/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })),
 );
+const MaintenancePage = lazy(() =>
+  import('../features/maintenance/MaintenancePage').then((module) => ({ default: module.MaintenancePage })),
+);
 
 function RouteFallback() {
   return (
@@ -58,6 +61,7 @@ export function App() {
                 <Route path="divergencias" element={<DivergencesPage />} />
                 <Route path="nao-cadastrados" element={<UnknownPage />} />
                 <Route path="salas" element={<RoomsPage />} />
+                <Route path="manutencao" element={<MaintenancePage />} />
                 <Route path="importar" element={<ImportPage />} />
                 <Route path="exportar" element={<ExportPage />} />
                 <Route path="configuracoes" element={<SettingsPage />} />

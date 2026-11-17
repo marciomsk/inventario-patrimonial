@@ -69,6 +69,40 @@ export interface Asset {
   baixado?: boolean;
   dataBaixa?: IsoDateTime | null;
   motivoBaixa?: string | null;
+  /** Data de aquisição do bem (ex: "06/06/2018"). */
+  dataAquisicao?: string | null;
+  createdAt: IsoDateTime;
+  updatedAt: IsoDateTime;
+}
+
+export type MaintenanceStatus =
+  | 'EM_APROVACAO'
+  | 'APROVADO_CONSERTO'
+  | 'APROVADO_TROCA'
+  | 'CONCLUIDO'
+  | 'REPROVADO';
+
+export interface Maintenance {
+  id: string;
+  /** Número de documento sequencial (ex: "02149/2026"). */
+  numeroDocumento: string;
+  assetId: string | null;
+  plaqueta: string;
+  dataSolicitacao: string; // ISO date ou string d/m/Y
+  manutencaoProposta: string;
+  fornecedor: string;
+  codigoFornecedor?: string | null;
+  numeroManutencaoSenior?: string | null; // Mnt
+  nfPecas?: string | null;
+  nfServicos?: string | null;
+  valorPecas: number;
+  valorServicos: number;
+  valorOrcado: number; // total = peças + serviços
+  valorBemNovo?: number | null; // valor de compra de bem equivalente novo
+  status: MaintenanceStatus;
+  ocServicos?: string | null;
+  ocProdutos?: string | null;
+  observacoes?: string | null;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
 }

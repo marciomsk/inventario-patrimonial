@@ -26,6 +26,7 @@ const groups: Array<{ title: string; items: NavItem[] }> = [
       { to: '/divergencias', label: 'Divergências', icon: 'alert' },
       { to: '/nao-cadastrados', label: 'Não cadastrados', icon: 'tag' },
       { to: '/salas', label: 'Salas', icon: 'building' },
+      { to: '/manutencao', label: 'Manutenção', icon: 'refresh' },
     ],
   },
   {
@@ -46,6 +47,7 @@ const titles: Record<string, string> = {
   '/divergencias': 'Divergências',
   '/nao-cadastrados': 'Não cadastrados',
   '/salas': 'Salas',
+  '/manutencao': 'Manutenção',
   '/importar': 'Importar dados',
   '/exportar': 'Exportar',
   '/configuracoes': 'Configurações',

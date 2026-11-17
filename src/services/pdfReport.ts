@@ -1,4 +1,4 @@
-import type { Asset, AssetSessionState, InventoryEvent, Room } from '../domain/types';
+import type { Asset, AssetSessionState, InventoryEvent, Maintenance, Room } from '../domain/types';
 import { formatDateTime } from '../domain/format';
 
 export interface RoomReportData {
@@ -259,7 +259,7 @@ export function generateResponsiblePdfReport(data: ResponsibleReportData) {
       if (asset.baixado) {
         badgeText = 'BAIXADO';
         badgeClass = 'badge-baixado';
-        obsText = asset.motivoBaixa ? `Baixa: ${asset.motivoBaixa}` : 'Baixado';
+        obsText = asset.motivoBaixa ? `Baixado: ${asset.motivoBaixa}` : 'Baixado';
       } else if (conferido) {
         if (divergente) {
           badgeText = 'DIVERGENTE';
@@ -446,6 +446,164 @@ export function generateFilialPdfReport(data: FilialReportData) {
         <div class="sig-box">
           Assinatura do Auditor / Inventariante<br>
           <strong>Equipe de Patrimônio</strong>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
+}
+
+export interface MaintenanceReportData {
+  maintenance: Maintenance;
+  asset?: Asset | null;
+  room?: Room | null;
+  pastCount: number;
+  totalPastSpent: number;
+}
+
+export function generateMaintenancePdfReport(data: MaintenanceReportData) {
+  const { maintenance, asset, room, pastCount, totalPastSpent } = data;
+  const now = formatDateTime(new Date().toISOString());
+
+  const valorBemNovo = maintenance.valorBemNovo ?? 0;
+  const gastoAcumuladoTotal = totalPastSpent + maintenance.valorOrcado;
+  const inviabilidadePercentual = valorBemNovo > 0 ? Math.round((gastoAcumuladoTotal / valorBemNovo) * 100) : 0;
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>Solicitação de Conserto ou Troca - ${maintenance.numeroDocumento}</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 28px; font-size: 13px; line-height: 1.4; }
+        header { border-bottom: 2px solid #0f5132; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+        h1 { font-size: 18px; color: #0f5132; margin: 0 0 4px 0; text-align: center; }
+        .subtitle { font-size: 14px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 20px; }
+        .meta { font-size: 12px; color: #4d6057; text-align: right; }
+        .section-title { font-size: 13px; font-weight: bold; color: #0f5132; background: #eef3ef; padding: 6px 10px; border-left: 4px solid #0f5132; margin: 16px 0 8px 0; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        th, td { border: 1px solid #cdd9d2; padding: 8px 10px; text-align: left; font-size: 12px; }
+        th { background: #f7faf8; color: #33443b; width: 30%; }
+        .decision-box { border: 2px dashed #0f5132; padding: 14px; border-radius: 8px; margin-top: 24px; background: #fcfdfc; }
+        .decision-box h3 { margin: 0 0 10px 0; font-size: 14px; color: #0f5132; }
+        .checkbox-row { display: flex; gap: 30px; margin-top: 10px; font-weight: bold; font-size: 13px; }
+        .signatures { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
+        @media print {
+          body { padding: 0; }
+          button { display: none !important; }
+        }
+      </style>
+    </head>
+    <body>
+      <div style="text-align: right; margin-bottom: 12px;">
+        <button onclick="window.print()" style="background: #0f5132; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">Imprimir / Salvar PDF</button>
+      </div>
+
+      <h1>CLUBE RECREATIVO DORES</h1>
+      <div class="subtitle">SOLICITAÇÃO DE CONSERTO OU TROCA DE EQUIPAMENTO</div>
+      <div class="meta">Documento Interno Nº: <strong>${maintenance.numeroDocumento}</strong> · Data: ${now}</div>
+
+      <p style="margin-top: 16px;">
+        A/C <strong>Comissão Administrativa do Clube Recreativo Dores</strong>.<br>
+        Pelo presente documento interno, venho solicitar a aprovação do orçamento em anexo para conserto do equipamento abaixo discriminado:
+      </p>
+
+      <div class="section-title">Identificação do Bem</div>
+      <table>
+        <tr>
+          <th>Equipamento / Descrição</th>
+          <td><strong>${asset?.descricao ?? 'Equipamento / Plaqueta ' + maintenance.plaqueta}</strong></td>
+        </tr>
+        <tr>
+          <th>Número do Patrimônio (Plaqueta)</th>
+          <td style="font-family: monospace; font-weight: bold; font-size: 14px;">${maintenance.plaqueta}</td>
+        </tr>
+        <tr>
+          <th>Setor / Localização</th>
+          <td>${room?.label ?? asset?.localOriginal ?? 'Não informado'}</td>
+        </tr>
+        <tr>
+          <th>Responsável pelo Setor</th>
+          <td>${room?.responsavel ?? 'Não informado'}</td>
+        </tr>
+        <tr>
+          <th>Manutenção Proposta / Serviço</th>
+          <td>${maintenance.manutencaoProposta}</td>
+        </tr>
+        <tr>
+          <th>Valor do Conserto (Orçado)</th>
+          <td><strong style="color: #0f5132; font-size: 14px;">R$ ${maintenance.valorOrcado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (Peças: R$ ${maintenance.valorPecas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Serviços: R$ ${maintenance.valorServicos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</td>
+        </tr>
+      </table>
+
+      <div class="section-title">Informações Adicionais e Viabilidade</div>
+      <table>
+        <tr>
+          <th>Data de Aquisição do Bem</th>
+          <td>${asset?.dataAquisicao || 'Não informada'}</td>
+        </tr>
+        <tr>
+          <th>Quantidade de Consertos Anteriores</th>
+          <td>${pastCount} manutenção(ões) registrada(s)</td>
+        </tr>
+        <tr>
+          <th>Valor Já Gasto em Consertos Anteriores</th>
+          <td>R$ ${totalPastSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        </tr>
+        <tr>
+          <th>Gasto Acumulado (Anteriores + Atual)</th>
+          <td><strong>R$ ${gastoAcumuladoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></td>
+        </tr>
+        <tr>
+          <th>Valor de Compra de Bem Novo Equivalente</th>
+          <td>${valorBemNovo > 0 ? `R$ ${valorBemNovo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${inviabilidadePercentual}% do valor de um bem novo)` : 'Não informado'}</td>
+        </tr>
+        <tr>
+          <th>Fornecedor Indicado</th>
+          <td>${maintenance.fornecedor} ${maintenance.codigoFornecedor ? `(Cód. ${maintenance.codigoFornecedor})` : ''}</td>
+        </tr>
+        <tr>
+          <th>Ordens de Compra (OC)</th>
+          <td>Serviços: ${maintenance.ocServicos || '—'} | Produtos: ${maintenance.ocProdutos || '—'}</td>
+        </tr>
+        <tr>
+          <th>Notas Fiscais (NF)</th>
+          <td>Peças: ${maintenance.nfPecas || '—'} | Serviços: ${maintenance.nfServicos || '—'}</td>
+        </tr>
+      </table>
+
+      ${maintenance.observacoes ? `<p><strong>Observações:</strong> ${maintenance.observacoes}</p>` : ''}
+
+      <div class="decision-box">
+        <h3>Decisão da Comissão Administrativa</h3>
+        <p>Favor assinalar a opção aprovada:</p>
+        <div class="checkbox-row">
+          <div>( &nbsp; &nbsp; ) Aprovado Conserto Conforme Orçamento</div>
+          <div>( &nbsp; &nbsp; ) Aprovado Compra de Equipamento Novo (Troca)</div>
+          <div>( &nbsp; &nbsp; ) Reprovado</div>
+        </div>
+        <div style="margin-top: 25px; display: flex; justify-content: space-between; font-size: 12px;">
+          <div>Data: ____/____/________</div>
+          <div>Assinatura da Comissão: _________________________________________</div>
+        </div>
+      </div>
+
+      <div class="signatures">
+        <div class="sig-box">
+          Responsável pelo Setor de Patrimônio / Solicitante<br>
+          <strong>Clube Recreativo Dores</strong>
+        </div>
+        <div class="sig-box">
+          Gestor / Diretoria Administrativa<br>
+          <strong>Aprovação Executiva</strong>
         </div>
       </div>
     </body>
