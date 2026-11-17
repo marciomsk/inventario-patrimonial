@@ -16,19 +16,18 @@ export interface SeniorImportPreview {
   };
 }
 
-/** Converte valor no formato brasileiro ("1.689,00" ou "1689,00" ou "50,00") para number. */
+/** Converte valor no formato brasileiro ("1.689,00" ou "1689,00" ou "50,00" ou "0,00") para number. */
 export function parseBrazilianCurrency(value: unknown): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   if (!value) return 0;
   const str = String(value).trim().replace('R$', '').trim();
   if (!str) return 0;
-  // Remove pontos de milhar e substitui vírgula por ponto decimal
   const normalized = str.replace(/\./g, '').replace(',', '.');
   const num = parseFloat(normalized);
   return Number.isFinite(num) ? num : 0;
 }
 
-/** Converte data DD/MM/AAAA para ISO ou string padrão */
+/** Converte data DD/MM/AAAA para ISO */
 export function parseSeniorDate(value: unknown): string {
   const str = cleanText(value);
   if (!str || str === '00/00/0000' || str === '__/__/____') return new Date().toISOString();
@@ -40,18 +39,56 @@ export function parseSeniorDate(value: unknown): string {
   return new Date().toISOString();
 }
 
+/** Parser CSV linha a linha que respeita campos entre aspas duplas e delimitador automático */
+function parseCsvLine(line: string, delimiter = ';'): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === delimiter && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result.map((c) => c.replace(/^"|"$/g, '').trim());
+}
+
 export async function parseSeniorMaintenanceCsv(buffer: ArrayBuffer, fileName: string): Promise<SeniorImportPreview> {
   const decoder = new TextDecoder('windows-1252');
   const text = decoder.decode(buffer);
   const rawLines = text.split(/\r?\n/);
+
+  // Detecta automaticamente o delimitador analisando a primeira linha com conteúdo
+  let delimiter = ';';
+  for (const l of rawLines) {
+    const trimmed = l.trim();
+    if (trimmed && (trimmed.includes(';') || trimmed.includes(','))) {
+      const semicolons = (trimmed.match(/;/g) || []).length;
+      const commas = (trimmed.match(/,/g) || []).length;
+      if (commas > semicolons && !trimmed.includes(';')) {
+        delimiter = ',';
+      }
+      break;
+    }
+  }
 
   const maintenances: Omit<Maintenance, 'id' | 'numeroDocumento' | 'createdAt' | 'updatedAt'>[] = [];
   const issues: ImportWarning[] = [];
 
   let totalRows = 0;
   let skipped = 0;
-
-  // Guarda o último registro parseado para anexar linhas de continuação de descrição
   let lastRecord: { manutencaoProposta: string; [key: string]: any } | null = null;
 
   for (let index = 0; index < rawLines.length; index++) {
@@ -59,7 +96,6 @@ export async function parseSeniorMaintenanceCsv(buffer: ArrayBuffer, fileName: s
     const line = rawLine.trim();
     if (!line) continue;
 
-    // Ignora cabeçalhos, rodapés e linhas de totais do relatório Senior VMME110
     const upper = line.toUpperCase();
     if (
       upper.includes('CLUBE RECREATIVO DORES') ||
@@ -71,32 +107,27 @@ export async function parseSeniorMaintenanceCsv(buffer: ArrayBuffer, fileName: s
       upper.includes('VMME110.GER') ||
       upper.includes('TOTAIS') ||
       upper.includes('RELATORIO') ||
-      line.startsWith(';') ||
-      line.split(';').every((c) => !c.trim())
+      upper.includes('EMITIDO EM')
     ) {
       continue;
     }
 
-    const cols = rawLine.split(';');
-    // Limpa colunas
-    const cleanedCols = cols.map((c) => c.trim().replace(/^"|"$/g, ''));
-
-    // Verifica se é uma linha principal de manutenção (coluna 0 é plaqueta numérica ou contém dígitos)
-    const col0 = cleanedCols[0] ?? '';
-    const isMainRow = /^\d{3,8}$/.test(col0);
+    const cols = parseCsvLine(rawLine, delimiter);
+    const col0 = cols[0] ?? '';
+    const isMainRow = cols.length >= 12 && /^\d{4,10}$/.test(col0);
 
     if (isMainRow) {
       totalRows += 1;
       const plaqueta = normalizePlaqueta(col0);
-      const codigoFornecedor = cleanedCols[3] || null;
-      const mnt = cleanedCols[4] || null;
-      const serv = cleanedCols[5] || null;
-      const descricaoServico = cleanedCols[6] || '';
-      const dtPecas = parseSeniorDate(cleanedCols[7]);
-      const nfPecas = cleanedCols[9] || null;
-      const valorPecas = parseBrazilianCurrency(cleanedCols[10]);
-      const nfServicos = cleanedCols[11] || null;
-      const valorServicos = parseBrazilianCurrency(cleanedCols[12]);
+      const codigoFornecedor = cols[3] || null;
+      const mnt = cols[4] || null;
+      const serv = cols[5] || null;
+      const descricaoServico = cols[6] || '';
+      const dtPecas = parseSeniorDate(cols[7] === '00/00/0000' ? cols[8] : cols[7]);
+      const nfPecas = cols[9] || null;
+      const valorPecas = parseBrazilianCurrency(cols[10]);
+      const nfServicos = cols[11] || null;
+      const valorServicos = parseBrazilianCurrency(cols[12] ?? cols[11]);
       const valorOrcado = valorPecas + valorServicos;
 
       const record = {
@@ -121,9 +152,18 @@ export async function parseSeniorMaintenanceCsv(buffer: ArrayBuffer, fileName: s
 
       maintenances.push(record);
       lastRecord = record;
-    } else if (cleanedCols.length === 1 && cleanedCols[0] && lastRecord) {
-      // Linha de continuação de descrição quebrada pelo gerador Senior
-      lastRecord.manutencaoProposta = `${lastRecord.manutencaoProposta} ${cleanedCols[0]}`;
+    } else if (cols.length === 1 && cols[0] && lastRecord) {
+      const continuation = cols[0];
+      const upperCont = continuation.toUpperCase();
+      if (
+        !upperCont.includes('CLUBE RECREATIVO') &&
+        !upperCont.includes('SETOR DE') &&
+        !upperCont.includes('PERIODO') &&
+        !upperCont.includes('VALOR TOTAL') &&
+        !upperCont.includes('TOTAIS')
+      ) {
+        lastRecord.manutencaoProposta = `${lastRecord.manutencaoProposta} ${continuation}`;
+      }
     } else {
       skipped += 1;
     }
@@ -172,11 +212,9 @@ export async function applySeniorMaintenanceImport(preview: SeniorImportPreview)
     assetMap.set(a.plaquetaKey, a.id);
   }
 
-  // Gera número de documento base para lote
   const now = nowIso();
   const rows: Maintenance[] = [];
 
-  // Precisamos gerar números de documento sequenciais para cada um
   const baseDocs = await db.maintenances.toArray();
   let maxSeq = 2148;
   const currentYearStr = String(new Date().getFullYear());
