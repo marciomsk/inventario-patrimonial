@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { PageHeader } from '../../components/PageHeader';
 import { Badge, Card, EmptyState, StatCard } from '../../components/Card';
@@ -7,6 +7,7 @@ import { Icon } from '../../components/Icon';
 import { Modal } from '../../components/Modal';
 import { useToast } from '../../app/ToastContext';
 import { useInventoryData } from '../../hooks/useInventoryData';
+import { db } from '../../db/database';
 import { createMaintenance, updateMaintenanceStatus, getMaintenanceHistory, listMaintenances } from '../../db/maintenanceRepository';
 import { writeOffAsset } from '../../db/assetsRepository';
 import { generateMaintenancePdfReport } from '../../services/pdfReport';
@@ -42,6 +43,7 @@ export function MaintenancePage() {
 
   // Form states for new maintenance request
   const [plaqueta, setPlaqueta] = useState('');
+  const [dataAquisicao, setDataAquisicao] = useState('');
   const [manutencaoProposta, setManutencaoProposta] = useState('');
   const [fornecedor, setFornecedor] = useState('');
   const [codigoFornecedor, setCodigoFornecedor] = useState('');
@@ -59,6 +61,12 @@ export function MaintenancePage() {
       (a) => a.plaqueta.toLowerCase() === clean || a.plaquetaKey === clean,
     );
   }, [assets, plaqueta]);
+
+  useEffect(() => {
+    if (selectedAsset) {
+      setDataAquisicao(selectedAsset.dataAquisicao ?? '');
+    }
+  }, [selectedAsset]);
 
   const assetHistory = useLiveQuery(
     async () => (selectedAsset ? getMaintenanceHistory(selectedAsset.plaqueta) : []),
@@ -113,6 +121,12 @@ export function MaintenancePage() {
     }
 
     try {
+      if (selectedAsset) {
+        await db.assets.update(selectedAsset.id, {
+          dataAquisicao: dataAquisicao.trim() || null,
+        });
+      }
+
       await createMaintenance({
         assetId: selectedAsset?.id ?? null,
         plaqueta: plaqueta.trim(),
@@ -353,6 +367,15 @@ export function MaintenancePage() {
                 placeholder="Ex.: 022308"
                 autoComplete="off"
                 required
+              />
+            </label>
+            <label className="field">
+              <span>Data de Aquisição</span>
+              <input
+                value={dataAquisicao}
+                onChange={(e) => setDataAquisicao(e.target.value)}
+                placeholder="Ex.: 06/06/2018"
+                autoComplete="off"
               />
             </label>
             <label className="field">

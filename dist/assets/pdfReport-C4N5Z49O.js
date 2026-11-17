@@ -1,10 +1,11 @@
-import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
+import{t as e}from"./index-B79E508-.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
       <meta charset="UTF-8">
       <title>Laudo de Inventário - ${n.label}</title>
       <style>
+        @page { size: A4; margin: 10mm 12mm; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 24px; font-size: 11px; line-height: 1.15; }
         header { border-bottom: 2px solid #0f5132; padding-bottom: 8px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; }
         h1 { font-size: 18px; color: #0f5132; margin: 0 0 2px 0; }
@@ -24,8 +25,8 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
         .badge-conferido { background: #dcefe3; color: #0f5132; }
         .badge-divergente { background: #fdf3dc; color: #92610a; }
         .badge-baixado { background: #e2e8f0; color: #4a5568; }
-        .signatures { margin-top: 30px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 6px; font-size: 12px; }
+        .signatures { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
         @media print {
           body { padding: 0; }
           button { display: none !important; }
@@ -97,6 +98,7 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
       <meta charset="UTF-8">
       <title>Relatório por Responsável - ${n}</title>
       <style>
+        @page { size: A4; margin: 10mm 12mm; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 24px; font-size: 11px; line-height: 1.15; }
         header { border-bottom: 2px solid #0f5132; padding-bottom: 8px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; }
         h1 { font-size: 18px; color: #0f5132; margin: 0 0 2px 0; }
@@ -112,8 +114,8 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
         .badge-conferido { background: #dcefe3; color: #0f5132; }
         .badge-divergente { background: #fdf3dc; color: #92610a; }
         .badge-baixado { background: #e2e8f0; color: #4a5568; }
-        .signatures { margin-top: 30px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 6px; font-size: 12px; }
+        .signatures { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
         @media print {
           body { padding: 0; }
           button { display: none !important; }
@@ -176,6 +178,7 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
       <meta charset="UTF-8">
       <title>Relatório por Filial - ${n}</title>
       <style>
+        @page { size: A4; margin: 10mm 12mm; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 24px; font-size: 11px; line-height: 1.15; }
         header { border-bottom: 2px solid #0f5132; padding-bottom: 8px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; }
         h1 { font-size: 18px; color: #0f5132; margin: 0 0 2px 0; }
@@ -191,8 +194,8 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
         .badge-conferido { background: #dcefe3; color: #0f5132; }
         .badge-divergente { background: #fdf3dc; color: #92610a; }
         .badge-baixado { background: #e2e8f0; color: #4a5568; }
-        .signatures { margin-top: 30px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 6px; font-size: 12px; }
+        .signatures { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
         @media print {
           body { padding: 0; }
           button { display: none !important; }
@@ -248,27 +251,32 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
       </div>
     </body>
     </html>
-  `;let l=window.open(``,`_blank`);l&&(l.document.write(c),l.document.close())}function i(t){let{maintenance:n,asset:r,room:i,pastCount:a,totalPastSpent:o}=t,s=e(new Date().toISOString()),c=n.valorBemNovo??0,l=o+n.valorOrcado,u=c>0?Math.round(l/c*100):0,d=`
+  `;let l=window.open(``,`_blank`);l&&(l.document.write(c),l.document.close())}function i(t){let{maintenance:n,asset:r,room:i,pastCount:a,totalPastSpent:o}=t,s=e(new Date().toISOString()),c=`${typeof window<`u`?window.location.origin:``}/logo-dores.png`,l=n.valorBemNovo??0,u=o+n.valorOrcado,d=l>0?Math.round(u/l*100):0,f=`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
       <meta charset="UTF-8">
       <title>Solicitação de Conserto ou Troca - ${n.numeroDocumento}</title>
       <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 28px; font-size: 13px; line-height: 1.4; }
-        header { border-bottom: 2px solid #0f5132; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
-        h1 { font-size: 18px; color: #0f5132; margin: 0 0 4px 0; text-align: center; }
-        .subtitle { font-size: 14px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 20px; }
-        .meta { font-size: 12px; color: #4d6057; text-align: right; }
-        .section-title { font-size: 13px; font-weight: bold; color: #0f5132; background: #eef3ef; padding: 6px 10px; border-left: 4px solid #0f5132; margin: 16px 0 8px 0; text-transform: uppercase; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-        th, td { border: 1px solid #cdd9d2; padding: 8px 10px; text-align: left; font-size: 12px; }
-        th { background: #f7faf8; color: #33443b; width: 30%; }
-        .decision-box { border: 2px dashed #0f5132; padding: 14px; border-radius: 8px; margin-top: 24px; background: #fcfdfc; }
-        .decision-box h3 { margin: 0 0 10px 0; font-size: 14px; color: #0f5132; }
-        .checkbox-row { display: flex; gap: 30px; margin-top: 10px; font-weight: bold; font-size: 13px; }
-        .signatures { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
+        @page { size: A4; margin: 10mm 12mm; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 20px; font-size: 12px; line-height: 1.35; }
+        header { border-bottom: 2px solid #0f5132; padding-bottom: 8px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-title { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 6px; }
+        .logo-title img { height: 55px; object-fit: contain; }
+        h1 { font-size: 17px; color: #0f5132; margin: 0; }
+        .subtitle { font-size: 13px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 14px; }
+        .meta { font-size: 11px; color: #4d6057; text-align: right; margin-bottom: 10px; }
+        .section-title { font-size: 12px; font-weight: bold; color: #0f5132; background: #eef3ef; padding: 4px 8px; border-left: 4px solid #0f5132; margin: 12px 0 6px 0; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th, td { border: 1px solid #cdd9d2; padding: 5px 8px; text-align: left; font-size: 11px; }
+        th { background: #f7faf8; color: #33443b; width: 28%; }
+        .inline-grid { display: flex; justify-content: space-between; gap: 16px; }
+        .inline-grid > div { width: 50%; }
+        .decision-box { border: 2px dashed #0f5132; padding: 10px 14px; border-radius: 8px; margin-top: 16px; background: #fcfdfc; page-break-inside: avoid; }
+        .decision-box h3 { margin: 0 0 6px 0; font-size: 13px; color: #0f5132; }
+        .checkbox-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; font-weight: bold; font-size: 11px; }
+        .signatures { margin-top: 55px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 11px; }
         @media print {
           body { padding: 0; }
           button { display: none !important; }
@@ -276,18 +284,18 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
       </style>
     </head>
     <body>
-      <div style="text-align: right; margin-bottom: 12px;">
-        <button onclick="window.print()" style="background: #0f5132; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">Imprimir / Salvar PDF</button>
+      <div style="text-align: right; margin-bottom: 8px;">
+        <button onclick="window.print()" style="background: #0f5132; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Imprimir / Salvar PDF</button>
       </div>
 
-      <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 8px;">
-        <img src="/logo-dores.png" alt="Logo Dores" style="height: 60px; object-fit: contain;" onerror="this.style.display='none'">
-        <h1 style="margin: 0; font-size: 20px; color: #0f5132;">CLUBE RECREATIVO DORES</h1>
+      <div class="logo-title">
+        <img src="${c}" alt="Clube Dores" onerror="this.style.display='none'">
+        <h1>CLUBE RECREATIVO DORES</h1>
       </div>
       <div class="subtitle">SOLICITAÇÃO DE CONSERTO OU TROCA DE EQUIPAMENTO</div>
       <div class="meta">Documento Interno Nº: <strong>${n.numeroDocumento}</strong> · Data: ${s}</div>
 
-      <p style="margin-top: 16px;">
+      <p style="margin-top: 8px; margin-bottom: 10px;">
         A/C <strong>Comissão Administrativa do Clube Recreativo Dores</strong>.<br>
         Pelo presente documento interno, venho solicitar a aprovação do orçamento em anexo para conserto do equipamento abaixo discriminado:
       </p>
@@ -300,7 +308,7 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
         </tr>
         <tr>
           <th>Número do Patrimônio (Plaqueta)</th>
-          <td style="font-family: monospace; font-weight: bold; font-size: 14px;">${n.plaqueta}</td>
+          <td style="font-family: monospace; font-weight: bold; font-size: 13px;">${n.plaqueta}</td>
         </tr>
         <tr>
           <th>Setor / Localização</th>
@@ -316,7 +324,7 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
         </tr>
         <tr>
           <th>Valor do Conserto (Orçado)</th>
-          <td><strong style="color: #0f5132; font-size: 14px;">R$ ${n.valorOrcado.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong> (Peças: R$ ${n.valorPecas.toLocaleString(`pt-BR`,{minimumFractionDigits:2})} | Serviços: R$ ${n.valorServicos.toLocaleString(`pt-BR`,{minimumFractionDigits:2})})</td>
+          <td><strong style="color: #0f5132; font-size: 13px;">R$ ${n.valorOrcado.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong> (Peças: R$ ${n.valorPecas.toLocaleString(`pt-BR`,{minimumFractionDigits:2})} | Serviços: R$ ${n.valorServicos.toLocaleString(`pt-BR`,{minimumFractionDigits:2})})</td>
         </tr>
       </table>
 
@@ -336,11 +344,11 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
         </tr>
         <tr>
           <th>Gasto Acumulado (Anteriores + Atual)</th>
-          <td><strong>R$ ${l.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong></td>
+          <td><strong>R$ ${u.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong></td>
         </tr>
         <tr>
           <th>Valor de Compra de Bem Novo Equivalente</th>
-          <td>${c>0?`R$ ${c.toLocaleString(`pt-BR`,{minimumFractionDigits:2})} (${u}% do valor de um bem novo)`:`Não informado`}</td>
+          <td>${l>0?`R$ ${l.toLocaleString(`pt-BR`,{minimumFractionDigits:2})} (Já gastos ${d}% do valor de um bem novo)`:`Não informado`}</td>
         </tr>
         <tr>
           <th>Fornecedor Indicado</th>
@@ -348,25 +356,35 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
         </tr>
         <tr>
           <th>Ordens de Compra (OC)</th>
-          <td>Serviços: ${n.ocServicos||`—`} | Produtos: ${n.ocProdutos||`—`}</td>
+          <td>
+            <div class="inline-grid">
+              <div>Serviços: <strong>${n.ocServicos||`—`}</strong></div>
+              <div>Produtos: <strong>${n.ocProdutos||`—`}</strong></div>
+            </div>
+          </td>
         </tr>
         <tr>
           <th>Notas Fiscais (NF)</th>
-          <td>Peças: ${n.nfPecas||`—`} | Serviços: ${n.nfServicos||`—`}</td>
+          <td>
+            <div class="inline-grid">
+              <div>Peças: <strong>${n.nfPecas||`—`}</strong></div>
+              <div>Serviços: <strong>${n.nfServicos||`—`}</strong></div>
+            </div>
+          </td>
         </tr>
       </table>
 
-      ${n.observacoes?`<p><strong>Observações:</strong> ${n.observacoes}</p>`:``}
+      ${n.observacoes?`<p style="margin: 6px 0;"><strong>Observações:</strong> ${n.observacoes}</p>`:``}
 
       <div class="decision-box">
         <h3>Decisão da Comissão Administrativa</h3>
-        <p>Favor assinalar a opção aprovada:</p>
+        <p style="margin: 0 0 4px 0;">Favor assinalar a opção aprovada:</p>
         <div class="checkbox-row">
-          <div>( &nbsp; &nbsp; ) Aprovado Conserto Conforme Orçamento</div>
-          <div>( &nbsp; &nbsp; ) Aprovado Compra de Equipamento Novo (Troca)</div>
+          <div>( &nbsp; &nbsp; ) Conserto Conforme Orçamento</div>
+          <div>( &nbsp; &nbsp; ) Compra de Equipamento Novo</div>
           <div>( &nbsp; &nbsp; ) Reprovado</div>
         </div>
-        <div style="margin-top: 25px; display: flex; justify-content: space-between; font-size: 12px;">
+        <div style="margin-top: 14px; display: flex; justify-content: space-between; font-size: 11px;">
           <div>Data: ____/____/________</div>
           <div>Assinatura da Comissão: _________________________________________</div>
         </div>
@@ -374,14 +392,14 @@ import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states
 
       <div class="signatures">
         <div class="sig-box">
-          Responsável pelo Setor de Patrimônio / Solicitante<br>
-          <strong>Clube Recreativo Dores</strong>
+          Assinatura do Responsável do Setor / Solicitante<br>
+          <strong>${i?.responsavel||`Responsável pelo Setor`}</strong>
         </div>
         <div class="sig-box">
-          Gestor / Diretoria Administrativa<br>
-          <strong>Aprovação Executiva</strong>
+          Assinatura da Comissão / Gestor / Diretoria<br>
+          <strong>Comissão Administrativa</strong>
         </div>
       </div>
     </body>
     </html>
-  `,f=window.open(``,`_blank`);f&&(f.document.write(d),f.document.close())}export{t as i,i as n,n as r,r as t};
+  `,p=window.open(``,`_blank`);p&&(p.document.write(f),p.document.close())}export{t as i,i as n,n as r,r as t};
