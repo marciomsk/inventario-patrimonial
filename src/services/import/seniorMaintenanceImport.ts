@@ -27,14 +27,15 @@ export function parseBrazilianCurrency(value: unknown): number {
   return Number.isFinite(num) ? num : 0;
 }
 
-/** Converte data DD/MM/AAAA para ISO */
+/** Converte data DD/MM/AAAA para ISO ao meio-dia local para evitar recuo de UTC-3 */
 export function parseSeniorDate(value: unknown): string {
   const str = cleanText(value);
   if (!str || str === '00/00/0000' || str === '__/__/____') return new Date().toISOString();
   const parts = str.split('/');
   if (parts.length === 3) {
     const [d, m, y] = parts;
-    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T00:00:00.000Z`;
+    const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10), 12, 0, 0);
+    return !Number.isNaN(dateObj.getTime()) ? dateObj.toISOString() : new Date().toISOString();
   }
   return new Date().toISOString();
 }
@@ -121,7 +122,6 @@ export async function parseSeniorMaintenanceCsv(buffer: ArrayBuffer, fileName: s
       const plaqueta = normalizePlaqueta(col0);
       const codigoFornecedor = cols[3] || null;
       const mnt = cols[4] || null;
-      const serv = cols[5] || null;
       const descricaoServico = cols[6] || '';
       const dtPecas = parseSeniorDate(cols[7] === '00/00/0000' ? cols[8] : cols[7]);
       const nfPecas = cols[9] || null;
@@ -145,7 +145,7 @@ export async function parseSeniorMaintenanceCsv(buffer: ArrayBuffer, fileName: s
         valorOrcado,
         valorBemNovo: null,
         status: 'CONCLUIDO' as const,
-        ocServicos: serv,
+        ocServicos: null,
         ocProdutos: null,
         observacoes: `Importado de VMME110.CSV (Senior) - Mnt: ${mnt || 'N/A'}`,
       };
@@ -215,26 +215,9 @@ export async function applySeniorMaintenanceImport(preview: SeniorImportPreview)
   const now = nowIso();
   const rows: Maintenance[] = [];
 
-  const baseDocs = await db.maintenances.toArray();
-  let maxSeq = 2148;
-  const currentYearStr = String(new Date().getFullYear());
-  for (const item of baseDocs) {
-    if (item.numeroDocumento) {
-      const parts = item.numeroDocumento.split('/');
-      if (parts.length === 2 && parts[1] === currentYearStr) {
-        const seq = parseInt(parts[0], 10);
-        if (!Number.isNaN(seq) && seq > maxSeq) maxSeq = seq;
-      }
-    }
-  }
-
-  let seqCounter = maxSeq;
-
   for (const m of preview.maintenances) {
-    seqCounter += 1;
-    const seqPadded = String(seqCounter).padStart(5, '0');
-    const numeroDocumento = `${seqPadded}/${currentYearStr}`;
     const assetId = assetMap.get(plaquetaKey(m.plaqueta)) ?? null;
+    const numeroDocumento = `Legado Mnt ${m.numeroManutencaoSenior || 'N/A'}`;
 
     rows.push({
       ...m,

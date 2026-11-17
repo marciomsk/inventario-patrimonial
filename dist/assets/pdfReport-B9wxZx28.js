@@ -1,4 +1,4 @@
-import{t as e}from"./index-CmlGZ6OK.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
+import{t as e}from"./index-XIc11MeK.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
@@ -280,7 +280,10 @@ import{t as e}from"./index-CmlGZ6OK.js";function t(t){let{room:n,assets:r,states
         <button onclick="window.print()" style="background: #0f5132; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">Imprimir / Salvar PDF</button>
       </div>
 
-      <h1>CLUBE RECREATIVO DORES</h1>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 8px;">
+        <img src="/logo-dores.png" alt="Logo Dores" style="height: 60px; object-fit: contain;" onerror="this.style.display='none'">
+        <h1 style="margin: 0; font-size: 20px; color: #0f5132;">CLUBE RECREATIVO DORES</h1>
+      </div>
       <div class="subtitle">SOLICITAÇÃO DE CONSERTO OU TROCA DE EQUIPAMENTO</div>
       <div class="meta">Documento Interno Nº: <strong>${n.numeroDocumento}</strong> · Data: ${s}</div>
 

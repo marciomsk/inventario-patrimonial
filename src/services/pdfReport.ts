@@ -507,7 +507,10 @@ export function generateMaintenancePdfReport(data: MaintenanceReportData) {
         <button onclick="window.print()" style="background: #0f5132; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">Imprimir / Salvar PDF</button>
       </div>
 
-      <h1>CLUBE RECREATIVO DORES</h1>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 8px;">
+        <img src="/logo-dores.png" alt="Logo Dores" style="height: 60px; object-fit: contain;" onerror="this.style.display='none'">
+        <h1 style="margin: 0; font-size: 20px; color: #0f5132;">CLUBE RECREATIVO DORES</h1>
+      </div>
       <div class="subtitle">SOLICITAÇÃO DE CONSERTO OU TROCA DE EQUIPAMENTO</div>
       <div class="meta">Documento Interno Nº: <strong>${maintenance.numeroDocumento}</strong> · Data: ${now}</div>
 

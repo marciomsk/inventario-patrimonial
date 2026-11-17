@@ -266,13 +266,20 @@ export function MaintenancePage() {
                             size="sm"
                             variant="secondary"
                             icon="file"
-                            onClick={() => {
+                            onClick={async () => {
+                              const history = await getMaintenanceHistory(item.plaqueta);
+                              const pastItems = history.filter(
+                                (m) => m.id !== item.id && m.dataSolicitacao <= item.dataSolicitacao && m.status === 'CONCLUIDO',
+                              );
+                              const pastCount = pastItems.length;
+                              const totalPastSpent = pastItems.reduce((sum, m) => sum + m.valorOrcado, 0);
+
                               generateMaintenancePdfReport({
                                 maintenance: item,
                                 asset,
                                 room,
-                                pastCount: 0,
-                                totalPastSpent: 0,
+                                pastCount,
+                                totalPastSpent,
                               });
                             }}
                             title="Gerar PDF para Comissão"

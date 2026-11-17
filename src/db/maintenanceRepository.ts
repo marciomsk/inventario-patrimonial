@@ -44,9 +44,9 @@ export async function generateNextDocumentNumber(): Promise<string> {
   const currentYear = new Date().getFullYear();
   const currentYearStr = String(currentYear);
 
-  let maxSeq = 2148; // starting base if empty
+  let maxSeq = 2149; // Piso mínimo 2150 para o ano atual
   for (const item of all) {
-    if (item.numeroDocumento) {
+    if (item.numeroDocumento && !item.numeroDocumento.startsWith('Legado Mnt')) {
       const parts = item.numeroDocumento.split('/');
       if (parts.length === 2 && parts[1] === currentYearStr) {
         const seq = parseInt(parts[0], 10);
