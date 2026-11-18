@@ -474,7 +474,6 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
   const { maintenance, asset, room, pastCount, totalPastSpent } = data;
   const now = formatDateTime(new Date().toISOString());
 
-  // Carrega a logomarca em Base64 para garantir que sempre renderize no window.print() sem falhar em about:blank
   let logoBase64 = '';
   try {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -488,7 +487,7 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
       });
     }
   } catch {
-    // Fallback silencioso caso fetch falhe offline
+    // Fallback silencioso
   }
 
   const valorBemNovo = maintenance.valorBemNovo ?? 0;
@@ -503,7 +502,7 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
       <title>Solicitação de Conserto ou Troca - ${maintenance.numeroDocumento}</title>
       <style>
         @page { size: A4; margin: 8mm 10mm; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 0; font-size: 14px; }
         .print-page {
           height: 274mm;
           max-height: 274mm;
@@ -514,23 +513,23 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
           overflow: hidden;
           padding: 8px 12px;
         }
-        header { border-bottom: 2px solid #0f5132; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        header { border-bottom: 2px solid #0f5132; padding-bottom: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .logo-title { display: flex; align-items: center; gap: 14px; }
         .logo-title img { height: 64px; width: auto; object-fit: contain; }
-        h1 { font-size: 18px; color: #0f5132; margin: 0; }
-        .subtitle { font-size: 14px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 10px; }
-        .meta { font-size: 11.5px; color: #4d6057; text-align: right; margin-bottom: 8px; }
-        .section-title { font-size: 12.5px; font-weight: bold; color: #0f5132; background: #eef3ef; padding: 4px 8px; border-left: 4px solid #0f5132; margin: 8px 0 4px 0; text-transform: uppercase; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
-        th, td { border: 1px solid #cdd9d2; padding: 6px 9px; text-align: left; font-size: 12.5px; }
+        h1 { font-size: 20px; color: #0f5132; margin: 0; }
+        .subtitle { font-size: 15px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 12px; }
+        .meta { font-size: 12px; color: #4d6057; text-align: right; margin-bottom: 8px; }
+        .section-title { font-size: 13.5px; font-weight: bold; color: #0f5132; background: #eef3ef; padding: 5px 10px; border-left: 4px solid #0f5132; margin: 10px 0 6px 0; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        th, td { border: 1px solid #cdd9d2; padding: 9px 12px; text-align: left; font-size: 14px; }
         th { background: #f7faf8; color: #33443b; width: 28%; font-weight: 600; }
         .inline-grid { display: flex; justify-content: space-between; gap: 16px; }
         .inline-grid > div { width: 50%; }
-        .decision-box { border: 2px dashed #0f5132; padding: 10px 14px; border-radius: 8px; margin-top: 10px; background: #fcfdfc; page-break-inside: avoid; }
-        .decision-box h3 { margin: 0 0 4px 0; font-size: 13px; color: #0f5132; }
-        .checkbox-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; font-weight: bold; font-size: 11.5px; }
-        .signatures { margin-top: auto; padding-top: 48px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
+        .decision-box { border: 2px dashed #0f5132; padding: 12px 16px; border-radius: 8px; margin-top: 12px; background: #fcfdfc; page-break-inside: avoid; }
+        .decision-box h3 { margin: 0 0 6px 0; font-size: 14px; color: #0f5132; }
+        .checkbox-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px; font-weight: bold; font-size: 13px; }
+        .signatures { margin-top: auto; padding-top: 60px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12.5px; }
         @media print {
           body { padding: 0; }
           button { display: none !important; }
@@ -548,13 +547,13 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
             ${logoBase64 ? `<img src="${logoBase64}" alt="Clube Dores">` : ''}
             <div>
               <h1>CLUBE RECREATIVO DORES</h1>
-              <div style="font-size: 11px; color: #4d6057;">Setor de Patrimônio e Manutenção</div>
+              <div style="font-size: 12px; color: #4d6057;">Setor de Patrimônio e Manutenção</div>
             </div>
           </div>
           <div class="subtitle">SOLICITAÇÃO DE CONSERTO OU TROCA DE EQUIPAMENTO</div>
           <div class="meta">Documento Interno Nº: <strong>${maintenance.numeroDocumento}</strong> · Data: ${now}</div>
 
-          <p style="margin-top: 6px; margin-bottom: 8px; font-size: 12.5px;">
+          <p style="margin-top: 6px; margin-bottom: 10px; font-size: 14px;">
             A/C <strong>Comissão Administrativa do Clube Recreativo Dores</strong>.<br>
             Pelo presente documento interno, venho solicitar a aprovação do orçamento em anexo para conserto do equipamento abaixo discriminado:
           </p>
@@ -567,7 +566,7 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
             </tr>
             <tr>
               <th>Número do Patrimônio (Plaqueta)</th>
-              <td style="font-family: monospace; font-weight: bold; font-size: 13.5px;">${maintenance.plaqueta}</td>
+              <td style="font-family: monospace; font-weight: bold; font-size: 14.5px;">${maintenance.plaqueta}</td>
             </tr>
             <tr>
               <th>Setor / Localização</th>
@@ -583,7 +582,7 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
             </tr>
             <tr>
               <th>Valor do Conserto (Orçado)</th>
-              <td><strong style="color: #0f5132; font-size: 13.5px;">R$ ${maintenance.valorOrcado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (Peças: R$ ${maintenance.valorPecas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Serviços: R$ ${maintenance.valorServicos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</td>
+              <td><strong style="color: #0f5132; font-size: 14.5px; white-space: nowrap;">R$ ${maintenance.valorOrcado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (Peças: <span style="white-space: nowrap;">R$ ${maintenance.valorPecas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> | Serviços: <span style="white-space: nowrap;">R$ ${maintenance.valorServicos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>)</td>
             </tr>
           </table>
 
@@ -599,15 +598,15 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
             </tr>
             <tr>
               <th>Valor Já Gasto em Consertos Anteriores</th>
-              <td>R$ ${totalPastSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+              <td><span style="white-space: nowrap;">R$ ${totalPastSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></td>
             </tr>
             <tr>
               <th>Gasto Acumulado (Anteriores + Atual)</th>
-              <td><strong>R$ ${gastoAcumuladoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></td>
+              <td><strong><span style="white-space: nowrap;">R$ ${gastoAcumuladoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></strong></td>
             </tr>
             <tr>
               <th>Valor de Compra de Bem Novo Equivalente</th>
-              <td>${valorBemNovo > 0 ? `R$ ${valorBemNovo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Já gastos ${inviabilidadePercentual}% do valor de um bem novo)` : 'Não informado'}</td>
+              <td>${valorBemNovo > 0 ? `<span style="white-space: nowrap;">R$ ${valorBemNovo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> (Já gastos <strong style="color: #0f5132;">${inviabilidadePercentual}%</strong> do valor de um bem novo)` : 'Não informado'}</td>
             </tr>
             <tr>
               <th>Fornecedor Indicado</th>
@@ -633,27 +632,23 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
             </tr>
           </table>
 
-          ${maintenance.observacoes ? `<p style="margin: 4px 0; font-size: 12px;"><strong>Observações:</strong> ${maintenance.observacoes}</p>` : ''}
+          ${maintenance.observacoes ? `<p style="margin: 6px 0; font-size: 13.5px;"><strong>Observações:</strong> ${maintenance.observacoes}</p>` : ''}
 
           <div class="decision-box">
             <h3>Decisão da Comissão Administrativa</h3>
-            <p style="margin: 0 0 3px 0; font-size: 11.5px;">Favor assinalar a opção aprovada:</p>
+            <p style="margin: 0 0 6px 0; font-size: 13px;">Favor assinalar a opção aprovada:</p>
             <div class="checkbox-row">
               <div>( &nbsp; &nbsp; ) Conserto Conforme Orçamento</div>
               <div>( &nbsp; &nbsp; ) Compra de Equipamento Novo</div>
               <div>( &nbsp; &nbsp; ) Reprovado</div>
-            </div>
-            <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 11px;">
-              <div>Data: ____/____/________</div>
-              <div>Assinatura da Comissão: _________________________________________</div>
             </div>
           </div>
         </div>
 
         <div class="signatures">
           <div class="sig-box">
-            Assinatura do Responsável do Setor / Solicitante<br>
-            <strong>${room?.responsavel || 'Responsável pelo Setor'}</strong>
+            Responsável pelo Setor de Patrimônio<br>
+            <strong>Setor de Patrimônio e Manutenção</strong>
           </div>
           <div class="sig-box">
             Assinatura da Comissão / Gestor / Diretoria<br>
