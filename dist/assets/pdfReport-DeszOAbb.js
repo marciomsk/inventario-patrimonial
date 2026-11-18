@@ -1,4 +1,4 @@
-import{t as e}from"./index-B79E508-.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
+import{t as e}from"./index-C6sBK0f9.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
@@ -25,8 +25,8 @@ import{t as e}from"./index-B79E508-.js";function t(t){let{room:n,assets:r,states
         .badge-conferido { background: #dcefe3; color: #0f5132; }
         .badge-divergente { background: #fdf3dc; color: #92610a; }
         .badge-baixado { background: #e2e8f0; color: #4a5568; }
-        .signatures { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
+        .signatures { margin-top: 30px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 6px; font-size: 12px; }
         @media print {
           body { padding: 0; }
           button { display: none !important; }
@@ -251,32 +251,42 @@ import{t as e}from"./index-B79E508-.js";function t(t){let{room:n,assets:r,states
       </div>
     </body>
     </html>
-  `;let l=window.open(``,`_blank`);l&&(l.document.write(c),l.document.close())}function i(t){let{maintenance:n,asset:r,room:i,pastCount:a,totalPastSpent:o}=t,s=e(new Date().toISOString()),c=`${typeof window<`u`?window.location.origin:``}/logo-dores.png`,l=n.valorBemNovo??0,u=o+n.valorOrcado,d=l>0?Math.round(u/l*100):0,f=`
+  `;let l=window.open(``,`_blank`);l&&(l.document.write(c),l.document.close())}async function i(t){let{maintenance:n,asset:r,room:i,pastCount:a,totalPastSpent:o}=t,s=e(new Date().toISOString()),c=``;try{let e=typeof window<`u`?window.location.origin:``,t=await fetch(`${e}/logo-dores.png`);if(t.ok){let e=await t.blob();c=await new Promise(t=>{let n=new FileReader;n.onloadend=()=>t(n.result),n.readAsDataURL(e)})}}catch{}let l=n.valorBemNovo??0,u=o+n.valorOrcado,d=l>0?Math.round(u/l*100):0,f=`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
       <meta charset="UTF-8">
       <title>Solicitação de Conserto ou Troca - ${n.numeroDocumento}</title>
       <style>
-        @page { size: A4; margin: 10mm 12mm; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 20px; font-size: 12px; line-height: 1.35; }
-        header { border-bottom: 2px solid #0f5132; padding-bottom: 8px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .logo-title { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 6px; }
-        .logo-title img { height: 55px; object-fit: contain; }
-        h1 { font-size: 17px; color: #0f5132; margin: 0; }
-        .subtitle { font-size: 13px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 14px; }
-        .meta { font-size: 11px; color: #4d6057; text-align: right; margin-bottom: 10px; }
-        .section-title { font-size: 12px; font-weight: bold; color: #0f5132; background: #eef3ef; padding: 4px 8px; border-left: 4px solid #0f5132; margin: 12px 0 6px 0; text-transform: uppercase; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        th, td { border: 1px solid #cdd9d2; padding: 5px 8px; text-align: left; font-size: 11px; }
-        th { background: #f7faf8; color: #33443b; width: 28%; }
+        @page { size: A4; margin: 8mm 10mm; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 0; }
+        .print-page {
+          height: 274mm;
+          max-height: 274mm;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          box-sizing: border-box;
+          overflow: hidden;
+          padding: 8px 12px;
+        }
+        header { border-bottom: 2px solid #0f5132; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .logo-title { display: flex; align-items: center; gap: 14px; }
+        .logo-title img { height: 64px; width: auto; object-fit: contain; }
+        h1 { font-size: 18px; color: #0f5132; margin: 0; }
+        .subtitle { font-size: 14px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 10px; }
+        .meta { font-size: 11.5px; color: #4d6057; text-align: right; margin-bottom: 8px; }
+        .section-title { font-size: 12.5px; font-weight: bold; color: #0f5132; background: #eef3ef; padding: 4px 8px; border-left: 4px solid #0f5132; margin: 8px 0 4px 0; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        th, td { border: 1px solid #cdd9d2; padding: 6px 9px; text-align: left; font-size: 12.5px; }
+        th { background: #f7faf8; color: #33443b; width: 28%; font-weight: 600; }
         .inline-grid { display: flex; justify-content: space-between; gap: 16px; }
         .inline-grid > div { width: 50%; }
-        .decision-box { border: 2px dashed #0f5132; padding: 10px 14px; border-radius: 8px; margin-top: 16px; background: #fcfdfc; page-break-inside: avoid; }
-        .decision-box h3 { margin: 0 0 6px 0; font-size: 13px; color: #0f5132; }
-        .checkbox-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; font-weight: bold; font-size: 11px; }
-        .signatures { margin-top: 55px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 11px; }
+        .decision-box { border: 2px dashed #0f5132; padding: 10px 14px; border-radius: 8px; margin-top: 10px; background: #fcfdfc; page-break-inside: avoid; }
+        .decision-box h3 { margin: 0 0 4px 0; font-size: 13px; color: #0f5132; }
+        .checkbox-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; font-weight: bold; font-size: 11.5px; }
+        .signatures { margin-top: auto; padding-top: 48px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
         @media print {
           body { padding: 0; }
           button { display: none !important; }
@@ -288,116 +298,123 @@ import{t as e}from"./index-B79E508-.js";function t(t){let{room:n,assets:r,states
         <button onclick="window.print()" style="background: #0f5132; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Imprimir / Salvar PDF</button>
       </div>
 
-      <div class="logo-title">
-        <img src="${c}" alt="Clube Dores" onerror="this.style.display='none'">
-        <h1>CLUBE RECREATIVO DORES</h1>
-      </div>
-      <div class="subtitle">SOLICITAÇÃO DE CONSERTO OU TROCA DE EQUIPAMENTO</div>
-      <div class="meta">Documento Interno Nº: <strong>${n.numeroDocumento}</strong> · Data: ${s}</div>
-
-      <p style="margin-top: 8px; margin-bottom: 10px;">
-        A/C <strong>Comissão Administrativa do Clube Recreativo Dores</strong>.<br>
-        Pelo presente documento interno, venho solicitar a aprovação do orçamento em anexo para conserto do equipamento abaixo discriminado:
-      </p>
-
-      <div class="section-title">Identificação do Bem</div>
-      <table>
-        <tr>
-          <th>Equipamento / Descrição</th>
-          <td><strong>${r?.descricao??`Equipamento / Plaqueta `+n.plaqueta}</strong></td>
-        </tr>
-        <tr>
-          <th>Número do Patrimônio (Plaqueta)</th>
-          <td style="font-family: monospace; font-weight: bold; font-size: 13px;">${n.plaqueta}</td>
-        </tr>
-        <tr>
-          <th>Setor / Localização</th>
-          <td>${i?.label??r?.localOriginal??`Não informado`}</td>
-        </tr>
-        <tr>
-          <th>Responsável pelo Setor</th>
-          <td>${i?.responsavel??`Não informado`}</td>
-        </tr>
-        <tr>
-          <th>Manutenção Proposta / Serviço</th>
-          <td>${n.manutencaoProposta}</td>
-        </tr>
-        <tr>
-          <th>Valor do Conserto (Orçado)</th>
-          <td><strong style="color: #0f5132; font-size: 13px;">R$ ${n.valorOrcado.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong> (Peças: R$ ${n.valorPecas.toLocaleString(`pt-BR`,{minimumFractionDigits:2})} | Serviços: R$ ${n.valorServicos.toLocaleString(`pt-BR`,{minimumFractionDigits:2})})</td>
-        </tr>
-      </table>
-
-      <div class="section-title">Informações Adicionais e Viabilidade</div>
-      <table>
-        <tr>
-          <th>Data de Aquisição do Bem</th>
-          <td>${r?.dataAquisicao||`Não informada`}</td>
-        </tr>
-        <tr>
-          <th>Quantidade de Consertos Anteriores</th>
-          <td>${a} manutenção(ões) registrada(s)</td>
-        </tr>
-        <tr>
-          <th>Valor Já Gasto em Consertos Anteriores</th>
-          <td>R$ ${o.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</td>
-        </tr>
-        <tr>
-          <th>Gasto Acumulado (Anteriores + Atual)</th>
-          <td><strong>R$ ${u.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong></td>
-        </tr>
-        <tr>
-          <th>Valor de Compra de Bem Novo Equivalente</th>
-          <td>${l>0?`R$ ${l.toLocaleString(`pt-BR`,{minimumFractionDigits:2})} (Já gastos ${d}% do valor de um bem novo)`:`Não informado`}</td>
-        </tr>
-        <tr>
-          <th>Fornecedor Indicado</th>
-          <td>${n.fornecedor} ${n.codigoFornecedor?`(Cód. ${n.codigoFornecedor})`:``}</td>
-        </tr>
-        <tr>
-          <th>Ordens de Compra (OC)</th>
-          <td>
-            <div class="inline-grid">
-              <div>Serviços: <strong>${n.ocServicos||`—`}</strong></div>
-              <div>Produtos: <strong>${n.ocProdutos||`—`}</strong></div>
+      <div class="print-page">
+        <div>
+          <div class="logo-title">
+            ${c?`<img src="${c}" alt="Clube Dores">`:``}
+            <div>
+              <h1>CLUBE RECREATIVO DORES</h1>
+              <div style="font-size: 11px; color: #4d6057;">Setor de Patrimônio e Manutenção</div>
             </div>
-          </td>
-        </tr>
-        <tr>
-          <th>Notas Fiscais (NF)</th>
-          <td>
-            <div class="inline-grid">
-              <div>Peças: <strong>${n.nfPecas||`—`}</strong></div>
-              <div>Serviços: <strong>${n.nfServicos||`—`}</strong></div>
+          </div>
+          <div class="subtitle">SOLICITAÇÃO DE CONSERTO OU TROCA DE EQUIPAMENTO</div>
+          <div class="meta">Documento Interno Nº: <strong>${n.numeroDocumento}</strong> · Data: ${s}</div>
+
+          <p style="margin-top: 6px; margin-bottom: 8px; font-size: 12.5px;">
+            A/C <strong>Comissão Administrativa do Clube Recreativo Dores</strong>.<br>
+            Pelo presente documento interno, venho solicitar a aprovação do orçamento em anexo para conserto do equipamento abaixo discriminado:
+          </p>
+
+          <div class="section-title">Identificação do Bem</div>
+          <table>
+            <tr>
+              <th>Equipamento / Descrição</th>
+              <td><strong>${r?.descricao??`Equipamento / Plaqueta `+n.plaqueta}</strong></td>
+            </tr>
+            <tr>
+              <th>Número do Patrimônio (Plaqueta)</th>
+              <td style="font-family: monospace; font-weight: bold; font-size: 13.5px;">${n.plaqueta}</td>
+            </tr>
+            <tr>
+              <th>Setor / Localização</th>
+              <td>${i?.label??r?.localOriginal??`Não informado`}</td>
+            </tr>
+            <tr>
+              <th>Responsável pelo Setor</th>
+              <td>${i?.responsavel??`Não informado`}</td>
+            </tr>
+            <tr>
+              <th>Manutenção Proposta / Serviço</th>
+              <td>${n.manutencaoProposta}</td>
+            </tr>
+            <tr>
+              <th>Valor do Conserto (Orçado)</th>
+              <td><strong style="color: #0f5132; font-size: 13.5px;">R$ ${n.valorOrcado.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong> (Peças: R$ ${n.valorPecas.toLocaleString(`pt-BR`,{minimumFractionDigits:2})} | Serviços: R$ ${n.valorServicos.toLocaleString(`pt-BR`,{minimumFractionDigits:2})})</td>
+            </tr>
+          </table>
+
+          <div class="section-title">Informações Adicionais e Viabilidade</div>
+          <table>
+            <tr>
+              <th>Data de Aquisição do Bem</th>
+              <td>${r?.dataAquisicao||`Não informada`}</td>
+            </tr>
+            <tr>
+              <th>Quantidade de Consertos Anteriores</th>
+              <td>${a} manutenção(ões) registrada(s)</td>
+            </tr>
+            <tr>
+              <th>Valor Já Gasto em Consertos Anteriores</th>
+              <td>R$ ${o.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</td>
+            </tr>
+            <tr>
+              <th>Gasto Acumulado (Anteriores + Atual)</th>
+              <td><strong>R$ ${u.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong></td>
+            </tr>
+            <tr>
+              <th>Valor de Compra de Bem Novo Equivalente</th>
+              <td>${l>0?`R$ ${l.toLocaleString(`pt-BR`,{minimumFractionDigits:2})} (Já gastos ${d}% do valor de um bem novo)`:`Não informado`}</td>
+            </tr>
+            <tr>
+              <th>Fornecedor Indicado</th>
+              <td>${n.fornecedor} ${n.codigoFornecedor?`(Cód. ${n.codigoFornecedor})`:``}</td>
+            </tr>
+            <tr>
+              <th>Ordens de Compra (OC)</th>
+              <td>
+                <div class="inline-grid">
+                  <div>Serviços: <strong>${n.ocServicos||`—`}</strong></div>
+                  <div>Produtos: <strong>${n.ocProdutos||`—`}</strong></div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>Notas Fiscais (NF)</th>
+              <td>
+                <div class="inline-grid">
+                  <div>Peças: <strong>${n.nfPecas||`—`}</strong></div>
+                  <div>Serviços: <strong>${n.nfServicos||`—`}</strong></div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          ${n.observacoes?`<p style="margin: 4px 0; font-size: 12px;"><strong>Observações:</strong> ${n.observacoes}</p>`:``}
+
+          <div class="decision-box">
+            <h3>Decisão da Comissão Administrativa</h3>
+            <p style="margin: 0 0 3px 0; font-size: 11.5px;">Favor assinalar a opção aprovada:</p>
+            <div class="checkbox-row">
+              <div>( &nbsp; &nbsp; ) Conserto Conforme Orçamento</div>
+              <div>( &nbsp; &nbsp; ) Compra de Equipamento Novo</div>
+              <div>( &nbsp; &nbsp; ) Reprovado</div>
             </div>
-          </td>
-        </tr>
-      </table>
-
-      ${n.observacoes?`<p style="margin: 6px 0;"><strong>Observações:</strong> ${n.observacoes}</p>`:``}
-
-      <div class="decision-box">
-        <h3>Decisão da Comissão Administrativa</h3>
-        <p style="margin: 0 0 4px 0;">Favor assinalar a opção aprovada:</p>
-        <div class="checkbox-row">
-          <div>( &nbsp; &nbsp; ) Conserto Conforme Orçamento</div>
-          <div>( &nbsp; &nbsp; ) Compra de Equipamento Novo</div>
-          <div>( &nbsp; &nbsp; ) Reprovado</div>
+            <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 11px;">
+              <div>Data: ____/____/________</div>
+              <div>Assinatura da Comissão: _________________________________________</div>
+            </div>
+          </div>
         </div>
-        <div style="margin-top: 14px; display: flex; justify-content: space-between; font-size: 11px;">
-          <div>Data: ____/____/________</div>
-          <div>Assinatura da Comissão: _________________________________________</div>
-        </div>
-      </div>
 
-      <div class="signatures">
-        <div class="sig-box">
-          Assinatura do Responsável do Setor / Solicitante<br>
-          <strong>${i?.responsavel||`Responsável pelo Setor`}</strong>
-        </div>
-        <div class="sig-box">
-          Assinatura da Comissão / Gestor / Diretoria<br>
-          <strong>Comissão Administrativa</strong>
+        <div class="signatures">
+          <div class="sig-box">
+            Assinatura do Responsável do Setor / Solicitante<br>
+            <strong>${i?.responsavel||`Responsável pelo Setor`}</strong>
+          </div>
+          <div class="sig-box">
+            Assinatura da Comissão / Gestor / Diretoria<br>
+            <strong>Comissão Administrativa</strong>
+          </div>
         </div>
       </div>
     </body>

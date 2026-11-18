@@ -55,8 +55,8 @@ export function generateRoomPdfReport(data: RoomReportData) {
         .badge-conferido { background: #dcefe3; color: #0f5132; }
         .badge-divergente { background: #fdf3dc; color: #92610a; }
         .badge-baixado { background: #e2e8f0; color: #4a5568; }
-        .signatures { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
+        .signatures { margin-top: 30px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 6px; font-size: 12px; }
         @media print {
           body { padding: 0; }
           button { display: none !important; }
@@ -470,12 +470,26 @@ export interface MaintenanceReportData {
   totalPastSpent: number;
 }
 
-export function generateMaintenancePdfReport(data: MaintenanceReportData) {
+export async function generateMaintenancePdfReport(data: MaintenanceReportData) {
   const { maintenance, asset, room, pastCount, totalPastSpent } = data;
   const now = formatDateTime(new Date().toISOString());
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const logoUrl = `${origin}/logo-dores.png`;
+  // Carrega a logomarca em Base64 para garantir que sempre renderize no window.print() sem falhar em about:blank
+  let logoBase64 = '';
+  try {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const res = await fetch(`${origin}/logo-dores.png`);
+    if (res.ok) {
+      const blob = await res.blob();
+      logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch {
+    // Fallback silencioso caso fetch falhe offline
+  }
 
   const valorBemNovo = maintenance.valorBemNovo ?? 0;
   const gastoAcumuladoTotal = totalPastSpent + maintenance.valorOrcado;
@@ -488,25 +502,35 @@ export function generateMaintenancePdfReport(data: MaintenanceReportData) {
       <meta charset="UTF-8">
       <title>Solicitação de Conserto ou Troca - ${maintenance.numeroDocumento}</title>
       <style>
-        @page { size: A4; margin: 10mm 12mm; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 20px; font-size: 12px; line-height: 1.35; }
-        header { border-bottom: 2px solid #0f5132; padding-bottom: 8px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .logo-title { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 6px; }
-        .logo-title img { height: 55px; object-fit: contain; }
-        h1 { font-size: 17px; color: #0f5132; margin: 0; }
-        .subtitle { font-size: 13px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 14px; }
-        .meta { font-size: 11px; color: #4d6057; text-align: right; margin-bottom: 10px; }
-        .section-title { font-size: 12px; font-weight: bold; color: #0f5132; background: #eef3ef; padding: 4px 8px; border-left: 4px solid #0f5132; margin: 12px 0 6px 0; text-transform: uppercase; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        th, td { border: 1px solid #cdd9d2; padding: 5px 8px; text-align: left; font-size: 11px; }
-        th { background: #f7faf8; color: #33443b; width: 28%; }
+        @page { size: A4; margin: 8mm 10mm; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 0; }
+        .print-page {
+          height: 274mm;
+          max-height: 274mm;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          box-sizing: border-box;
+          overflow: hidden;
+          padding: 8px 12px;
+        }
+        header { border-bottom: 2px solid #0f5132; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .logo-title { display: flex; align-items: center; gap: 14px; }
+        .logo-title img { height: 64px; width: auto; object-fit: contain; }
+        h1 { font-size: 18px; color: #0f5132; margin: 0; }
+        .subtitle { font-size: 14px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 10px; }
+        .meta { font-size: 11.5px; color: #4d6057; text-align: right; margin-bottom: 8px; }
+        .section-title { font-size: 12.5px; font-weight: bold; color: #0f5132; background: #eef3ef; padding: 4px 8px; border-left: 4px solid #0f5132; margin: 8px 0 4px 0; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        th, td { border: 1px solid #cdd9d2; padding: 6px 9px; text-align: left; font-size: 12.5px; }
+        th { background: #f7faf8; color: #33443b; width: 28%; font-weight: 600; }
         .inline-grid { display: flex; justify-content: space-between; gap: 16px; }
         .inline-grid > div { width: 50%; }
-        .decision-box { border: 2px dashed #0f5132; padding: 10px 14px; border-radius: 8px; margin-top: 16px; background: #fcfdfc; page-break-inside: avoid; }
-        .decision-box h3 { margin: 0 0 6px 0; font-size: 13px; color: #0f5132; }
-        .checkbox-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; font-weight: bold; font-size: 11px; }
-        .signatures { margin-top: 55px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 11px; }
+        .decision-box { border: 2px dashed #0f5132; padding: 10px 14px; border-radius: 8px; margin-top: 10px; background: #fcfdfc; page-break-inside: avoid; }
+        .decision-box h3 { margin: 0 0 4px 0; font-size: 13px; color: #0f5132; }
+        .checkbox-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; font-weight: bold; font-size: 11.5px; }
+        .signatures { margin-top: auto; padding-top: 48px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 45%; border-top: 1px solid #33443b; text-align: center; padding-top: 8px; font-size: 12px; }
         @media print {
           body { padding: 0; }
           button { display: none !important; }
@@ -518,116 +542,123 @@ export function generateMaintenancePdfReport(data: MaintenanceReportData) {
         <button onclick="window.print()" style="background: #0f5132; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Imprimir / Salvar PDF</button>
       </div>
 
-      <div class="logo-title">
-        <img src="${logoUrl}" alt="Clube Dores" onerror="this.style.display='none'">
-        <h1>CLUBE RECREATIVO DORES</h1>
-      </div>
-      <div class="subtitle">SOLICITAÇÃO DE CONSERTO OU TROCA DE EQUIPAMENTO</div>
-      <div class="meta">Documento Interno Nº: <strong>${maintenance.numeroDocumento}</strong> · Data: ${now}</div>
-
-      <p style="margin-top: 8px; margin-bottom: 10px;">
-        A/C <strong>Comissão Administrativa do Clube Recreativo Dores</strong>.<br>
-        Pelo presente documento interno, venho solicitar a aprovação do orçamento em anexo para conserto do equipamento abaixo discriminado:
-      </p>
-
-      <div class="section-title">Identificação do Bem</div>
-      <table>
-        <tr>
-          <th>Equipamento / Descrição</th>
-          <td><strong>${asset?.descricao ?? 'Equipamento / Plaqueta ' + maintenance.plaqueta}</strong></td>
-        </tr>
-        <tr>
-          <th>Número do Patrimônio (Plaqueta)</th>
-          <td style="font-family: monospace; font-weight: bold; font-size: 13px;">${maintenance.plaqueta}</td>
-        </tr>
-        <tr>
-          <th>Setor / Localização</th>
-          <td>${room?.label ?? asset?.localOriginal ?? 'Não informado'}</td>
-        </tr>
-        <tr>
-          <th>Responsável pelo Setor</th>
-          <td>${room?.responsavel ?? 'Não informado'}</td>
-        </tr>
-        <tr>
-          <th>Manutenção Proposta / Serviço</th>
-          <td>${maintenance.manutencaoProposta}</td>
-        </tr>
-        <tr>
-          <th>Valor do Conserto (Orçado)</th>
-          <td><strong style="color: #0f5132; font-size: 13px;">R$ ${maintenance.valorOrcado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (Peças: R$ ${maintenance.valorPecas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Serviços: R$ ${maintenance.valorServicos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</td>
-        </tr>
-      </table>
-
-      <div class="section-title">Informações Adicionais e Viabilidade</div>
-      <table>
-        <tr>
-          <th>Data de Aquisição do Bem</th>
-          <td>${asset?.dataAquisicao || 'Não informada'}</td>
-        </tr>
-        <tr>
-          <th>Quantidade de Consertos Anteriores</th>
-          <td>${pastCount} manutenção(ões) registrada(s)</td>
-        </tr>
-        <tr>
-          <th>Valor Já Gasto em Consertos Anteriores</th>
-          <td>R$ ${totalPastSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-        </tr>
-        <tr>
-          <th>Gasto Acumulado (Anteriores + Atual)</th>
-          <td><strong>R$ ${gastoAcumuladoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></td>
-        </tr>
-        <tr>
-          <th>Valor de Compra de Bem Novo Equivalente</th>
-          <td>${valorBemNovo > 0 ? `R$ ${valorBemNovo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Já gastos ${inviabilidadePercentual}% do valor de um bem novo)` : 'Não informado'}</td>
-        </tr>
-        <tr>
-          <th>Fornecedor Indicado</th>
-          <td>${maintenance.fornecedor} ${maintenance.codigoFornecedor ? `(Cód. ${maintenance.codigoFornecedor})` : ''}</td>
-        </tr>
-        <tr>
-          <th>Ordens de Compra (OC)</th>
-          <td>
-            <div class="inline-grid">
-              <div>Serviços: <strong>${maintenance.ocServicos || '—'}</strong></div>
-              <div>Produtos: <strong>${maintenance.ocProdutos || '—'}</strong></div>
+      <div class="print-page">
+        <div>
+          <div class="logo-title">
+            ${logoBase64 ? `<img src="${logoBase64}" alt="Clube Dores">` : ''}
+            <div>
+              <h1>CLUBE RECREATIVO DORES</h1>
+              <div style="font-size: 11px; color: #4d6057;">Setor de Patrimônio e Manutenção</div>
             </div>
-          </td>
-        </tr>
-        <tr>
-          <th>Notas Fiscais (NF)</th>
-          <td>
-            <div class="inline-grid">
-              <div>Peças: <strong>${maintenance.nfPecas || '—'}</strong></div>
-              <div>Serviços: <strong>${maintenance.nfServicos || '—'}</strong></div>
+          </div>
+          <div class="subtitle">SOLICITAÇÃO DE CONSERTO OU TROCA DE EQUIPAMENTO</div>
+          <div class="meta">Documento Interno Nº: <strong>${maintenance.numeroDocumento}</strong> · Data: ${now}</div>
+
+          <p style="margin-top: 6px; margin-bottom: 8px; font-size: 12.5px;">
+            A/C <strong>Comissão Administrativa do Clube Recreativo Dores</strong>.<br>
+            Pelo presente documento interno, venho solicitar a aprovação do orçamento em anexo para conserto do equipamento abaixo discriminado:
+          </p>
+
+          <div class="section-title">Identificação do Bem</div>
+          <table>
+            <tr>
+              <th>Equipamento / Descrição</th>
+              <td><strong>${asset?.descricao ?? 'Equipamento / Plaqueta ' + maintenance.plaqueta}</strong></td>
+            </tr>
+            <tr>
+              <th>Número do Patrimônio (Plaqueta)</th>
+              <td style="font-family: monospace; font-weight: bold; font-size: 13.5px;">${maintenance.plaqueta}</td>
+            </tr>
+            <tr>
+              <th>Setor / Localização</th>
+              <td>${room?.label ?? asset?.localOriginal ?? 'Não informado'}</td>
+            </tr>
+            <tr>
+              <th>Responsável pelo Setor</th>
+              <td>${room?.responsavel ?? 'Não informado'}</td>
+            </tr>
+            <tr>
+              <th>Manutenção Proposta / Serviço</th>
+              <td>${maintenance.manutencaoProposta}</td>
+            </tr>
+            <tr>
+              <th>Valor do Conserto (Orçado)</th>
+              <td><strong style="color: #0f5132; font-size: 13.5px;">R$ ${maintenance.valorOrcado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (Peças: R$ ${maintenance.valorPecas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Serviços: R$ ${maintenance.valorServicos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</td>
+            </tr>
+          </table>
+
+          <div class="section-title">Informações Adicionais e Viabilidade</div>
+          <table>
+            <tr>
+              <th>Data de Aquisição do Bem</th>
+              <td>${asset?.dataAquisicao || 'Não informada'}</td>
+            </tr>
+            <tr>
+              <th>Quantidade de Consertos Anteriores</th>
+              <td>${pastCount} manutenção(ões) registrada(s)</td>
+            </tr>
+            <tr>
+              <th>Valor Já Gasto em Consertos Anteriores</th>
+              <td>R$ ${totalPastSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+            </tr>
+            <tr>
+              <th>Gasto Acumulado (Anteriores + Atual)</th>
+              <td><strong>R$ ${gastoAcumuladoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></td>
+            </tr>
+            <tr>
+              <th>Valor de Compra de Bem Novo Equivalente</th>
+              <td>${valorBemNovo > 0 ? `R$ ${valorBemNovo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Já gastos ${inviabilidadePercentual}% do valor de um bem novo)` : 'Não informado'}</td>
+            </tr>
+            <tr>
+              <th>Fornecedor Indicado</th>
+              <td>${maintenance.fornecedor} ${maintenance.codigoFornecedor ? `(Cód. ${maintenance.codigoFornecedor})` : ''}</td>
+            </tr>
+            <tr>
+              <th>Ordens de Compra (OC)</th>
+              <td>
+                <div class="inline-grid">
+                  <div>Serviços: <strong>${maintenance.ocServicos || '—'}</strong></div>
+                  <div>Produtos: <strong>${maintenance.ocProdutos || '—'}</strong></div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>Notas Fiscais (NF)</th>
+              <td>
+                <div class="inline-grid">
+                  <div>Peças: <strong>${maintenance.nfPecas || '—'}</strong></div>
+                  <div>Serviços: <strong>${maintenance.nfServicos || '—'}</strong></div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          ${maintenance.observacoes ? `<p style="margin: 4px 0; font-size: 12px;"><strong>Observações:</strong> ${maintenance.observacoes}</p>` : ''}
+
+          <div class="decision-box">
+            <h3>Decisão da Comissão Administrativa</h3>
+            <p style="margin: 0 0 3px 0; font-size: 11.5px;">Favor assinalar a opção aprovada:</p>
+            <div class="checkbox-row">
+              <div>( &nbsp; &nbsp; ) Conserto Conforme Orçamento</div>
+              <div>( &nbsp; &nbsp; ) Compra de Equipamento Novo</div>
+              <div>( &nbsp; &nbsp; ) Reprovado</div>
             </div>
-          </td>
-        </tr>
-      </table>
-
-      ${maintenance.observacoes ? `<p style="margin: 6px 0;"><strong>Observações:</strong> ${maintenance.observacoes}</p>` : ''}
-
-      <div class="decision-box">
-        <h3>Decisão da Comissão Administrativa</h3>
-        <p style="margin: 0 0 4px 0;">Favor assinalar a opção aprovada:</p>
-        <div class="checkbox-row">
-          <div>( &nbsp; &nbsp; ) Conserto Conforme Orçamento</div>
-          <div>( &nbsp; &nbsp; ) Compra de Equipamento Novo</div>
-          <div>( &nbsp; &nbsp; ) Reprovado</div>
+            <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 11px;">
+              <div>Data: ____/____/________</div>
+              <div>Assinatura da Comissão: _________________________________________</div>
+            </div>
+          </div>
         </div>
-        <div style="margin-top: 14px; display: flex; justify-content: space-between; font-size: 11px;">
-          <div>Data: ____/____/________</div>
-          <div>Assinatura da Comissão: _________________________________________</div>
-        </div>
-      </div>
 
-      <div class="signatures">
-        <div class="sig-box">
-          Assinatura do Responsável do Setor / Solicitante<br>
-          <strong>${room?.responsavel || 'Responsável pelo Setor'}</strong>
-        </div>
-        <div class="sig-box">
-          Assinatura da Comissão / Gestor / Diretoria<br>
-          <strong>Comissão Administrativa</strong>
+        <div class="signatures">
+          <div class="sig-box">
+            Assinatura do Responsável do Setor / Solicitante<br>
+            <strong>${room?.responsavel || 'Responsável pelo Setor'}</strong>
+          </div>
+          <div class="sig-box">
+            Assinatura da Comissão / Gestor / Diretoria<br>
+            <strong>Comissão Administrativa</strong>
+          </div>
         </div>
       </div>
     </body>
