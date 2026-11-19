@@ -1,4 +1,4 @@
-import type { Asset, AssetSessionState, InventoryEvent, Maintenance, Room } from '../domain/types';
+import type { Asset, AssetSessionState, InventoryEvent, Maintenance, MovementNotice, Room } from '../domain/types';
 import { formatDateTime } from '../domain/format';
 
 export interface RoomReportData {
@@ -653,6 +653,220 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
           <div class="sig-box">
             Assinatura da Comissão / Gestor / Diretoria<br>
             <strong>Comissão Administrativa</strong>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
+}
+
+export interface MovementReportData {
+  notice: MovementNotice;
+}
+
+export async function generateMovementPdfReport(data: MovementReportData) {
+  const { notice } = data;
+
+  let logoBase64 = '';
+  try {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const res = await fetch(`${origin}/logo-dores.png`);
+    if (res.ok) {
+      const blob = await res.blob();
+      logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch {
+    // Fallback
+  }
+
+  const tipo = notice.tipoMovimentacao;
+  const isAquisicao = tipo === 'AQUISICAO';
+  const isTransferencia = tipo === 'TRANSFERENCIA';
+  const isConserto = tipo === 'REMESSA_CONSERTO';
+  const isBaixa = tipo === 'BAIXA';
+
+  const check = (cond: boolean) => (cond ? '[ X ]' : '[ &nbsp; ]');
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>Comunicado de Movimentação de Bens - CMB Nº ${notice.numeroCmb}</title>
+      <style>
+        @page { size: A4; margin: 8mm 10mm; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 0; font-size: 12px; }
+        .print-page {
+          height: 274mm;
+          max-height: 274mm;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          box-sizing: border-box;
+          overflow: hidden;
+          padding: 8px 12px;
+        }
+        header { border-bottom: 2px solid #0f5132; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .logo-title { display: flex; align-items: center; gap: 14px; }
+        .logo-title img { height: 60px; width: auto; object-fit: contain; }
+        h1 { font-size: 18px; color: #0f5132; margin: 0; }
+        .cmb-number { font-size: 16px; font-weight: bold; color: #9b1c1c; border: 2px solid #9b1c1c; padding: 4px 12px; border-radius: 6px; }
+        .subtitle { font-size: 14px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 10px; background: #eef3ef; padding: 4px; }
+        .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; font-size: 11.5px; background: #f7faf8; padding: 8px; border-radius: 6px; border: 1px solid #e0e8e3; }
+        .section-box { border: 1px solid #cdd9d2; padding: 6px 10px; margin-bottom: 8px; border-radius: 6px; background: #fcfdfc; }
+        .section-title { font-size: 11.5px; font-weight: bold; color: #0f5132; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #eef3ef; padding-bottom: 2px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 6px; margin-bottom: 6px; }
+        th, td { border: 1px solid #cdd9d2; padding: 4px 6px; text-align: left; font-size: 10.5px; }
+        th { background: #eef3ef; color: #0f5132; text-transform: uppercase; }
+        .signatures { margin-top: auto; padding-top: 20px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 48%; border-top: 1px solid #33443b; text-align: center; padding-top: 6px; font-size: 11px; }
+        @media print {
+          body { padding: 0; }
+          button { display: none !important; }
+        }
+      </style>
+    </head>
+    <body>
+      <div style="text-align: right; margin-bottom: 8px;">
+        <button onclick="window.print()" style="background: #0f5132; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Imprimir / Salvar PDF</button>
+      </div>
+
+      <div class="print-page">
+        <div>
+          <header>
+            <div class="logo-title">
+              ${logoBase64 ? `<img src="${logoBase64}" alt="Clube Dores">` : ''}
+              <div>
+                <h1>CLUBE RECREATIVO DORES</h1>
+                <div style="font-size: 11px; color: #4d6057;">Setor de Patrimônio e Contabilidade</div>
+              </div>
+            </div>
+            <div class="cmb-number">CMB Nº ${notice.numeroCmb}</div>
+          </header>
+
+          <div class="subtitle">COMUNICADO DE MOVIMENTAÇÃO DE BENS - CMB</div>
+
+          <div class="meta-grid">
+            <div><strong>Data Emissão:</strong> ${notice.dataEmissao}</div>
+            <div><strong>Local Origem:</strong> ${notice.localOrigem}</div>
+            <div><strong>Prédio Origem:</strong> ${notice.predioOrigem || '—'}</div>
+            <div><strong>Sala / Área:</strong> ${notice.salaOrigem}</div>
+          </div>
+
+          <!-- Tipos de Movimentação -->
+          <div class="section-box">
+            <div class="section-title">1. Tipo de Movimentação</div>
+            <div class="grid-3">
+              <div>${check(isAquisicao)} <strong>Aquisição</strong></div>
+              <div>${check(isTransferencia)} <strong>Transferência</strong></div>
+              <div>${check(isConserto)} <strong>Remessa Conserto</strong></div>
+            </div>
+            <div style="margin-top: 4px;">
+              <div>${check(isBaixa)} <strong>Baixa Patrimonial</strong></div>
+            </div>
+          </div>
+
+          ${isTransferencia ? `
+          <div class="section-box">
+            <div class="section-title">Detalhes da Transferência</div>
+            <div class="grid-3">
+              <div><strong>Destino:</strong> ${notice.localDestino || '—'}</div>
+              <div><strong>Prédio:</strong> ${notice.predioDestino || '—'}</div>
+              <div><strong>Sala:</strong> ${notice.salaDestino || '—'}</div>
+            </div>
+            <div class="grid-2" style="margin-top: 4px;">
+              <div><strong>Tipo:</strong> ${notice.tipoTransferencia || 'DEFINITIVA'}</div>
+              <div><strong>Retorno Temporário:</strong> ${notice.dataRetornoTemporaria || 'N/A'}</div>
+            </div>
+          </div>
+          ` : ''}
+
+          ${isConserto ? `
+          <div class="section-box">
+            <div class="section-title">Detalhes da Remessa para Conserto</div>
+            <div class="grid-3">
+              <div><strong>Fornecedor:</strong> ${notice.fornecedor || '—'}</div>
+              <div><strong>Contato:</strong> ${notice.contatoFornecedor || '—'}</div>
+              <div><strong>CNPJ/CPF:</strong> ${notice.cnpjCpfFornecedor || '—'}</div>
+            </div>
+            <div class="grid-2" style="margin-top: 4px;">
+              <div><strong>Previsão Retorno:</strong> ${notice.dataRetornoConserto || '—'}</div>
+              <div><strong>Justificativa:</strong> ${notice.justificativaConserto || '—'}</div>
+            </div>
+          </div>
+          ` : ''}
+
+          ${isBaixa ? `
+          <div class="section-box">
+            <div class="section-title">Detalhes da Baixa Patrimonial</div>
+            <div class="grid-2">
+              <div><strong>Motivo:</strong> ${notice.motivoBaixa || '—'}</div>
+              <div><strong>Destino / Justificativa:</strong> ${notice.justificativaDestinoBaixa || '—'}</div>
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- Tabela de Bens -->
+          <div class="section-box" style="margin-top: 6px;">
+            <div class="section-title">2. Relação de Bens Movimentados</div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 8%;">Qtd</th>
+                  <th style="width: 15%;">Plaqueta</th>
+                  <th style="width: 35%;">Descrição do Bem</th>
+                  <th style="width: 14%;">Nº Série</th>
+                  <th style="width: 14%;">Dt. Aquisição</th>
+                  <th style="width: 14%;">Vlr. Aquisição</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${notice.itens.map((i) => `
+                <tr>
+                  <td>${i.quantidade}</td>
+                  <td style="font-family: monospace; font-weight: bold;">${i.plaqueta}</td>
+                  <td>${i.descricao}</td>
+                  <td>${i.numeroSerie || '—'}</td>
+                  <td>${i.dataAquisicao || '—'}</td>
+                  <td>${i.valorAquisicao ? `R$ ${i.valorAquisicao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—'}</td>
+                </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Informações Fiscais -->
+          <div class="section-box">
+            <div class="section-title">3. Informações Fiscais (Opcional)</div>
+            <div class="grid-3">
+              <div><strong>Natureza Op.:</strong> ${notice.naturezaOperacao || '—'}</div>
+              <div><strong>CFOP:</strong> ${notice.cfop || '—'}</div>
+              <div><strong>Valor Total:</strong> ${notice.valorTotal ? `R$ ${notice.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="signatures">
+          <div class="sig-box">
+            Cedente / Receptor do Bem<br>
+            <strong>${notice.cedenteNome || 'Emitente'} / ${notice.receptorNome || 'Recebedor'}</strong>
+          </div>
+          <div class="sig-box">
+            Autorizado por (Patrimônio / Diretoria)<br>
+            <strong>Setor de Patrimônio — Clube Dores</strong>
           </div>
         </div>
       </div>

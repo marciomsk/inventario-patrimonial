@@ -1,4 +1,4 @@
-import{t as e}from"./index-BO-2MrIP.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
+import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
@@ -415,4 +415,178 @@ import{t as e}from"./index-BO-2MrIP.js";function t(t){let{room:n,assets:r,states
       </div>
     </body>
     </html>
-  `,p=window.open(``,`_blank`);p&&(p.document.write(f),p.document.close())}export{t as i,i as n,n as r,r as t};
+  `,p=window.open(``,`_blank`);p&&(p.document.write(f),p.document.close())}async function a(e){let{notice:t}=e,n=``;try{let e=typeof window<`u`?window.location.origin:``,t=await fetch(`${e}/logo-dores.png`);if(t.ok){let e=await t.blob();n=await new Promise(t=>{let n=new FileReader;n.onloadend=()=>t(n.result),n.readAsDataURL(e)})}}catch{}let r=t.tipoMovimentacao,i=r===`AQUISICAO`,a=r===`TRANSFERENCIA`,o=r===`REMESSA_CONSERTO`,s=r===`BAIXA`,c=e=>e?`[ X ]`:`[ &nbsp; ]`,l=`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>Comunicado de Movimentação de Bens - CMB Nº ${t.numeroCmb}</title>
+      <style>
+        @page { size: A4; margin: 8mm 10mm; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 0; font-size: 12px; }
+        .print-page {
+          height: 274mm;
+          max-height: 274mm;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          box-sizing: border-box;
+          overflow: hidden;
+          padding: 8px 12px;
+        }
+        header { border-bottom: 2px solid #0f5132; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .logo-title { display: flex; align-items: center; gap: 14px; }
+        .logo-title img { height: 60px; width: auto; object-fit: contain; }
+        h1 { font-size: 18px; color: #0f5132; margin: 0; }
+        .cmb-number { font-size: 16px; font-weight: bold; color: #9b1c1c; border: 2px solid #9b1c1c; padding: 4px 12px; border-radius: 6px; }
+        .subtitle { font-size: 14px; font-weight: bold; color: #33443b; text-align: center; margin-bottom: 10px; background: #eef3ef; padding: 4px; }
+        .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; font-size: 11.5px; background: #f7faf8; padding: 8px; border-radius: 6px; border: 1px solid #e0e8e3; }
+        .section-box { border: 1px solid #cdd9d2; padding: 6px 10px; margin-bottom: 8px; border-radius: 6px; background: #fcfdfc; }
+        .section-title { font-size: 11.5px; font-weight: bold; color: #0f5132; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #eef3ef; padding-bottom: 2px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 6px; margin-bottom: 6px; }
+        th, td { border: 1px solid #cdd9d2; padding: 4px 6px; text-align: left; font-size: 10.5px; }
+        th { background: #eef3ef; color: #0f5132; text-transform: uppercase; }
+        .signatures { margin-top: auto; padding-top: 20px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig-box { width: 48%; border-top: 1px solid #33443b; text-align: center; padding-top: 6px; font-size: 11px; }
+        @media print {
+          body { padding: 0; }
+          button { display: none !important; }
+        }
+      </style>
+    </head>
+    <body>
+      <div style="text-align: right; margin-bottom: 8px;">
+        <button onclick="window.print()" style="background: #0f5132; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Imprimir / Salvar PDF</button>
+      </div>
+
+      <div class="print-page">
+        <div>
+          <header>
+            <div class="logo-title">
+              ${n?`<img src="${n}" alt="Clube Dores">`:``}
+              <div>
+                <h1>CLUBE RECREATIVO DORES</h1>
+                <div style="font-size: 11px; color: #4d6057;">Setor de Patrimônio e Contabilidade</div>
+              </div>
+            </div>
+            <div class="cmb-number">CMB Nº ${t.numeroCmb}</div>
+          </header>
+
+          <div class="subtitle">COMUNICADO DE MOVIMENTAÇÃO DE BENS - CMB</div>
+
+          <div class="meta-grid">
+            <div><strong>Data Emissão:</strong> ${t.dataEmissao}</div>
+            <div><strong>Local Origem:</strong> ${t.localOrigem}</div>
+            <div><strong>Prédio Origem:</strong> ${t.predioOrigem||`—`}</div>
+            <div><strong>Sala / Área:</strong> ${t.salaOrigem}</div>
+          </div>
+
+          <!-- Tipos de Movimentação -->
+          <div class="section-box">
+            <div class="section-title">1. Tipo de Movimentação</div>
+            <div class="grid-3">
+              <div>${c(i)} <strong>Aquisição</strong></div>
+              <div>${c(a)} <strong>Transferência</strong></div>
+              <div>${c(o)} <strong>Remessa Conserto</strong></div>
+            </div>
+            <div style="margin-top: 4px;">
+              <div>${c(s)} <strong>Baixa Patrimonial</strong></div>
+            </div>
+          </div>
+
+          ${a?`
+          <div class="section-box">
+            <div class="section-title">Detalhes da Transferência</div>
+            <div class="grid-3">
+              <div><strong>Destino:</strong> ${t.localDestino||`—`}</div>
+              <div><strong>Prédio:</strong> ${t.predioDestino||`—`}</div>
+              <div><strong>Sala:</strong> ${t.salaDestino||`—`}</div>
+            </div>
+            <div class="grid-2" style="margin-top: 4px;">
+              <div><strong>Tipo:</strong> ${t.tipoTransferencia||`DEFINITIVA`}</div>
+              <div><strong>Retorno Temporário:</strong> ${t.dataRetornoTemporaria||`N/A`}</div>
+            </div>
+          </div>
+          `:``}
+
+          ${o?`
+          <div class="section-box">
+            <div class="section-title">Detalhes da Remessa para Conserto</div>
+            <div class="grid-3">
+              <div><strong>Fornecedor:</strong> ${t.fornecedor||`—`}</div>
+              <div><strong>Contato:</strong> ${t.contatoFornecedor||`—`}</div>
+              <div><strong>CNPJ/CPF:</strong> ${t.cnpjCpfFornecedor||`—`}</div>
+            </div>
+            <div class="grid-2" style="margin-top: 4px;">
+              <div><strong>Previsão Retorno:</strong> ${t.dataRetornoConserto||`—`}</div>
+              <div><strong>Justificativa:</strong> ${t.justificativaConserto||`—`}</div>
+            </div>
+          </div>
+          `:``}
+
+          ${s?`
+          <div class="section-box">
+            <div class="section-title">Detalhes da Baixa Patrimonial</div>
+            <div class="grid-2">
+              <div><strong>Motivo:</strong> ${t.motivoBaixa||`—`}</div>
+              <div><strong>Destino / Justificativa:</strong> ${t.justificativaDestinoBaixa||`—`}</div>
+            </div>
+          </div>
+          `:``}
+
+          <!-- Tabela de Bens -->
+          <div class="section-box" style="margin-top: 6px;">
+            <div class="section-title">2. Relação de Bens Movimentados</div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 8%;">Qtd</th>
+                  <th style="width: 15%;">Plaqueta</th>
+                  <th style="width: 35%;">Descrição do Bem</th>
+                  <th style="width: 14%;">Nº Série</th>
+                  <th style="width: 14%;">Dt. Aquisição</th>
+                  <th style="width: 14%;">Vlr. Aquisição</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${t.itens.map(e=>`
+                <tr>
+                  <td>${e.quantidade}</td>
+                  <td style="font-family: monospace; font-weight: bold;">${e.plaqueta}</td>
+                  <td>${e.descricao}</td>
+                  <td>${e.numeroSerie||`—`}</td>
+                  <td>${e.dataAquisicao||`—`}</td>
+                  <td>${e.valorAquisicao?`R$ ${e.valorAquisicao.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}`:`—`}</td>
+                </tr>
+                `).join(``)}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Informações Fiscais -->
+          <div class="section-box">
+            <div class="section-title">3. Informações Fiscais (Opcional)</div>
+            <div class="grid-3">
+              <div><strong>Natureza Op.:</strong> ${t.naturezaOperacao||`—`}</div>
+              <div><strong>CFOP:</strong> ${t.cfop||`—`}</div>
+              <div><strong>Valor Total:</strong> ${t.valorTotal?`R$ ${t.valorTotal.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}`:`—`}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="signatures">
+          <div class="sig-box">
+            Cedente / Receptor do Bem<br>
+            <strong>${t.cedenteNome||`Emitente`} / ${t.receptorNome||`Recebedor`}</strong>
+          </div>
+          <div class="sig-box">
+            Autorizado por (Patrimônio / Diretoria)<br>
+            <strong>Setor de Patrimônio — Clube Dores</strong>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `,u=window.open(``,`_blank`);u&&(u.document.write(l),u.document.close())}export{t as a,n as i,i as n,a as r,r as t};

@@ -107,6 +107,78 @@ export interface Maintenance {
   updatedAt: IsoDateTime;
 }
 
+export type MovementType =
+  | 'AQUISICAO'
+  | 'TRANSFERENCIA'
+  | 'REMESSA_CONSERTO'
+  | 'BAIXA';
+
+export type TransferType = 'DEFINITIVA' | 'TEMPORARIA';
+
+export type BaixaReason =
+  | 'VENDA'
+  | 'TERCEIROS'
+  | 'LEILAO'
+  | 'SUCATEAMENTO'
+  | 'BAIXA_BENFEITORIAS'
+  | 'DOACAO';
+
+export interface MovementItem {
+  plaqueta: string;
+  quantidade: number;
+  descricao: string;
+  numeroSerie?: string | null;
+  dataAquisicao?: string | null;
+  valorAquisicao?: number | null;
+  valorResidual?: number | null;
+}
+
+export interface MovementNotice {
+  id: string;
+  numeroCmb: string; // ex: "1054"
+  dataEmissao: string; // "DD/MM/YYYY"
+  localOrigem: string;
+  predioOrigem?: string | null;
+  salaOrigem: string;
+  tipoMovimentacao: MovementType;
+
+  // Transferência
+  localDestino?: string | null;
+  predioDestino?: string | null;
+  salaDestino?: string | null;
+  tipoTransferencia?: TransferType | null;
+  dataRetornoTemporaria?: string | null;
+
+  // Remessa Conserto
+  fornecedor?: string | null;
+  contatoFornecedor?: string | null;
+  cnpjCpfFornecedor?: string | null;
+  dataRetornoConserto?: string | null;
+  justificativaConserto?: string | null;
+
+  // Baixa
+  motivoBaixa?: BaixaReason | null;
+  justificativaDestinoBaixa?: string | null;
+
+  itens: MovementItem[];
+
+  cedenteNome?: string | null;
+  receptorNome?: string | null;
+
+  // Fiscais
+  naturezaOperacao?: string | null;
+  valorTotal?: number | null;
+  baseCalculo?: number | null;
+  dispositivoFiscal?: string | null;
+  cfop?: string | null;
+  aliquotaIcms?: number | null;
+  valorIcms?: number | null;
+
+  aplicadoNoInventario?: boolean;
+  createdAt: IsoDateTime;
+  updatedAt: IsoDateTime;
+}
+
 export type EventResult =
   | 'encontrado'
   | 'divergente'

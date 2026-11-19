@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
 import { Badge, Card, EmptyState, StatCard } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -33,6 +34,7 @@ const STATUS_TONES: Record<MaintenanceStatus, 'warning' | 'info' | 'danger' | 's
 export function MaintenancePage() {
   const { assets, assetsById, roomList } = useInventoryData();
   const { push } = useToast();
+  const navigate = useNavigate();
   const maintenances = useLiveQuery(() => listMaintenances(), []) ?? [];
 
   const [term, setTerm] = useState('');
@@ -299,6 +301,16 @@ export function MaintenancePage() {
                             title="Gerar PDF para Comissão"
                           >
                             PDF
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => {
+                              navigate('/movimentacao', { state: { prefillMaintenance: item } });
+                            }}
+                            title="Gerar CMB de Remessa"
+                          >
+                            CMB
                           </Button>
                           <Button
                             size="sm"

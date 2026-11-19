@@ -37,6 +37,9 @@ const SettingsPage = lazy(() =>
 const MaintenancePage = lazy(() =>
   import('../features/maintenance/MaintenancePage').then((module) => ({ default: module.MaintenancePage })),
 );
+const MovementPage = lazy(() =>
+  import('../features/movement/MovementPage').then((module) => ({ default: module.MovementPage })),
+);
 
 function RouteFallback() {
   return (
@@ -62,6 +65,7 @@ export function App() {
                 <Route path="nao-cadastrados" element={<UnknownPage />} />
                 <Route path="salas" element={<RoomsPage />} />
                 <Route path="manutencao" element={<MaintenancePage />} />
+                <Route path="movimentacao" element={<MovementPage />} />
                 <Route path="importar" element={<ImportPage />} />
                 <Route path="exportar" element={<ExportPage />} />
                 <Route path="configuracoes" element={<SettingsPage />} />
