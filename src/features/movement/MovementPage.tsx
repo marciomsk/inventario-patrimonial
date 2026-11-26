@@ -12,6 +12,7 @@ import { db } from '../../db/database';
 import { listMovements, createMovement, updateMovement, generateNextCmbNumber } from '../../db/movementRepository';
 import { generateMovementPdfReport } from '../../services/pdfReport';
 import { formatNumber } from '../../domain/format';
+import { plaquetaKey } from '../../domain/plaqueta';
 import type { MovementType, MovementItem, TransferType, BaixaReason } from '../../domain/types';
 
 const TYPE_LABELS: Record<MovementType, string> = {

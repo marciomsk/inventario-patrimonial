@@ -1,4 +1,4 @@
-import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
+import{t as e}from"./index-Bl00AqKe.js";function t(t){let{room:n,assets:r,states:i,sessionId:a}=t,o=r.filter(e=>!(!(n.id?e.roomId===n.id:e.localOriginal===n.label)||n.codigo&&e.plaqueta.trim()===n.codigo.trim())).sort((e,t)=>e.plaqueta.localeCompare(t.plaqueta,`pt-BR`)),s=o.filter(e=>!e.baixado),c=o.filter(e=>e.baixado).length,l=s.length,u=s.filter(e=>a&&i.get(e.id)?.conferido).length,d=l-u,f=l===0?0:Math.round(u/l*100),p=e(new Date().toISOString()),m=`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
@@ -228,7 +228,7 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
           </tr>
         </thead>
         <tbody>
-    `;for(let e of t){let t=o?a.get(e.id):void 0,n=t?.conferido??!1,r=t?.divergente??!1,i=`PENDENTE`,s=`badge-pendente`,l=e.observacao??``;e.baixado?(i=`BAIXADO`,s=`badge-baixado`,l=e.motivoBaixa?`Baixa: ${e.motivoBaixa}`:`Baixado`):n&&(r?(i=`DIVERGENTE`,s=`badge-divergente`):(i=`CONFERIDO`,s=`badge-conferido`)),c+=`
+    `;for(let e of t){let t=o?a.get(e.id):void 0,n=t?.conferido??!1,r=t?.divergente??!1,i=`PENDENTE`,s=`badge-pendente`,l=e.observacao??``;e.baixado?(i=`BAIXADO`,s=`badge-baixado`,l=e.motivoBaixa?`Baixado: ${e.motivoBaixa}`:`Baixado`):n&&(r?(i=`DIVERGENTE`,s=`badge-divergente`):(i=`CONFERIDO`,s=`badge-conferido`)),c+=`
         <tr>
           <td style="font-family: monospace; font-weight: bold;">${e.plaqueta}</td>
           <td class="desc">${e.descricao||`Sem descrição`}</td>
@@ -258,6 +258,7 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
       <meta charset="UTF-8">
       <title>Solicitação de Conserto ou Troca - ${n.numeroDocumento}</title>
       <style>
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         @page { size: A4; margin: 8mm 10mm; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 0; font-size: 14px; }
         .print-page {
@@ -280,6 +281,8 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
         table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
         th, td { border: 1px solid #cdd9d2; padding: 9px 12px; text-align: left; font-size: 14px; }
         th { background: #f7faf8; color: #33443b; width: 28%; font-weight: 600; }
+        .highlight-row { background-color: #dcfce7 !important; color: #064e3b !important; font-weight: 700 !important; }
+        .highlight-row td { background-color: #dcfce7 !important; color: #064e3b !important; font-weight: 700 !important; border-color: #86efac !important; }
         .inline-grid { display: flex; justify-content: space-between; gap: 16px; }
         .inline-grid > div { width: 50%; }
         .decision-box { border: 2px dashed #0f5132; padding: 12px 16px; border-radius: 8px; margin-top: 12px; background: #fcfdfc; page-break-inside: avoid; }
@@ -337,9 +340,9 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
               <th>Manutenção Proposta / Serviço</th>
               <td>${n.manutencaoProposta}</td>
             </tr>
-            <tr>
+            <tr class="highlight-row">
               <th>Valor do Conserto (Orçado)</th>
-              <td><strong style="color: #0f5132; font-size: 14.5px; white-space: nowrap;">R$ ${n.valorOrcado.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong> (Peças: <span style="white-space: nowrap;">R$ ${n.valorPecas.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</span> | Serviços: <span style="white-space: nowrap;">R$ ${n.valorServicos.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</span>)</td>
+              <td><strong style="font-size: 14.5px; white-space: nowrap;">R$ ${n.valorOrcado.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</strong> (Peças: <span style="white-space: nowrap;">R$ ${n.valorPecas.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</span> | Serviços: <span style="white-space: nowrap;">R$ ${n.valorServicos.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</span>)</td>
             </tr>
           </table>
 
@@ -357,13 +360,13 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
               <th>Valor Já Gasto em Consertos Anteriores</th>
               <td><span style="white-space: nowrap;">R$ ${o.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</span></td>
             </tr>
-            <tr>
+            <tr class="highlight-row">
               <th>Gasto Acumulado (Anteriores + Atual)</th>
               <td><strong><span style="white-space: nowrap;">R$ ${u.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</span></strong></td>
             </tr>
             <tr>
               <th>Valor de Compra de Bem Novo Equivalente</th>
-              <td>${l>0?`<span style="white-space: nowrap;">R$ ${l.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</span> (Já gastos <strong style="color: #0f5132;">${d}%</strong> do valor de um bem novo)`:`Não informado`}</td>
+              <td>${l>0?`<span style="white-space: nowrap;">R$ ${l.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</span> (Já gastos <strong style="color: #064e3b;">${d}%</strong> do valor de um bem novo)`:`Não informado`}</td>
             </tr>
             <tr>
               <th>Fornecedor Indicado</th>
@@ -415,7 +418,7 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
       </div>
     </body>
     </html>
-  `,p=window.open(``,`_blank`);p&&(p.document.write(f),p.document.close())}async function a(e){let{notice:t}=e,n=``;try{let e=typeof window<`u`?window.location.origin:``,t=await fetch(`${e}/logo-dores.png`);if(t.ok){let e=await t.blob();n=await new Promise(t=>{let n=new FileReader;n.onloadend=()=>t(n.result),n.readAsDataURL(e)})}}catch{}let r=t.tipoMovimentacao,i=r===`AQUISICAO`,a=r===`TRANSFERENCIA`,o=r===`REMESSA_CONSERTO`,s=r===`BAIXA`,c=e=>e?`[ X ]`:`[ &nbsp; ]`,l=`
+  `,p=window.open(``,`_blank`);p&&(p.document.write(f),p.document.close())}async function a(e){let{notice:t}=e,n=``;try{let e=typeof window<`u`?window.location.origin:``,t=await fetch(`${e}/logo-dores.png`);if(t.ok){let e=await t.blob();n=await new Promise(t=>{let n=new FileReader;n.onloadend=()=>t(n.result),n.readAsDataURL(e)})}}catch{}let r=t.tipoMovimentacao,i=r===`AQUISICAO`,a=r===`TRANSFERENCIA`,o=r===`REMESSA_CONSERTO`,s=r===`BAIXA`,c=e=>e?`[ X ]`:`[ &nbsp; ]`,l=t.salaOrigem;if(!l){let e=new Set(t.itens.map(e=>e.salaOrigem).filter(Boolean));l=e.size===1?[...e][0]:e.size>1?`Diversas / Múltiplos setores`:`Setor de Patrimônio`}let u=`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
@@ -480,7 +483,7 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
             <div><strong>Data Emissão:</strong> ${t.dataEmissao}</div>
             <div><strong>Local Origem:</strong> ${t.localOrigem}</div>
             <div><strong>Prédio Origem:</strong> ${t.predioOrigem||`—`}</div>
-            <div><strong>Sala / Área:</strong> ${t.salaOrigem}</div>
+            <div><strong>Sala / Área:</strong> ${l}</div>
           </div>
 
           <!-- Tipos de Movimentação -->
@@ -542,12 +545,12 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
             <table>
               <thead>
                 <tr>
-                  <th style="width: 8%;">Qtd</th>
-                  <th style="width: 15%;">Plaqueta</th>
-                  <th style="width: 35%;">Descrição do Bem</th>
-                  <th style="width: 14%;">Nº Série</th>
-                  <th style="width: 14%;">Dt. Aquisição</th>
-                  <th style="width: 14%;">Vlr. Aquisição</th>
+                  <th style="width: 6%;">Qtd</th>
+                  <th style="width: 14%;">Plaqueta</th>
+                  <th style="width: 28%;">Descrição do Bem</th>
+                  <th style="width: 20%;">Sala / Origem</th>
+                  <th style="width: 12%;">Aquisição</th>
+                  <th style="width: 10%;">Valor (R$)</th>
                 </tr>
               </thead>
               <tbody>
@@ -556,9 +559,9 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
                   <td>${e.quantidade}</td>
                   <td style="font-family: monospace; font-weight: bold;">${e.plaqueta}</td>
                   <td>${e.descricao}</td>
-                  <td>${e.numeroSerie||`—`}</td>
+                  <td>${e.salaOrigem||t.salaOrigem||`Setor Padrão`}</td>
                   <td>${e.dataAquisicao||`—`}</td>
-                  <td>${e.valorAquisicao?`R$ ${e.valorAquisicao.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}`:`—`}</td>
+                  <td>${e.valorAquisicao?`R$ ${e.valorAquisicao.toFixed(2)}`:`—`}</td>
                 </tr>
                 `).join(``)}
               </tbody>
@@ -589,4 +592,4 @@ import{t as e}from"./index-BiUrRV7W.js";function t(t){let{room:n,assets:r,states
       </div>
     </body>
     </html>
-  `,u=window.open(``,`_blank`);u&&(u.document.write(l),u.document.close())}export{t as a,n as i,i as n,a as r,r as t};
+  `,d=window.open(``,`_blank`);d&&(d.document.write(u),d.document.close())}export{t as a,n as i,i as n,a as r,r as t};
