@@ -131,6 +131,7 @@ export interface MovementItem {
   dataAquisicao?: string | null;
   valorAquisicao?: number | null;
   valorResidual?: number | null;
+  salaOrigem?: string | null;
 }
 
 export interface MovementNotice {

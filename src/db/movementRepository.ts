@@ -152,3 +152,28 @@ export async function createMovement(input: MovementNoticeInput): Promise<Moveme
 
   return notice;
 }
+
+export async function updateMovement(id: string, input: MovementNoticeInput): Promise<MovementNotice> {
+  return db.transaction('rw', db.movementNotices, async () => {
+    const existing = await db.movementNotices.get(id);
+    if (!existing) throw new Error('Comunicado (CMB) não encontrado.');
+    const now = nowIso();
+
+    const updated: MovementNotice = {
+      ...existing,
+      ...input,
+      numeroCmb: cleanText(input.numeroCmb) || existing.numeroCmb,
+      dataEmissao: cleanText(input.dataEmissao) || existing.dataEmissao,
+      localOrigem: cleanText(input.localOrigem) || existing.localOrigem,
+      salaOrigem: cleanText(input.salaOrigem) || existing.salaOrigem,
+      itens: input.itens ?? existing.itens,
+      updatedAt: now,
+    };
+
+    await db.movementNotices.put(updated);
+    if (updated.aplicadoNoInventario) {
+      await applyMovementToInventory(updated);
+    }
+    return updated;
+  });
+}
