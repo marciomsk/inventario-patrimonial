@@ -413,7 +413,7 @@ export function generateFilialPdfReport(data: FilialReportData) {
       if (asset.baixado) {
         badgeText = 'BAIXADO';
         badgeClass = 'badge-baixado';
-        obsText = asset.motivoBaixa ? `Baixa: ${asset.motivoBaixa}` : 'Baixado';
+        obsText = asset.motivoBaixa ? `Baixado: ${asset.motivoBaixa}` : 'Baixado';
       } else if (conferido) {
         if (divergente) {
           badgeText = 'DIVERGENTE';
@@ -501,6 +501,7 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
       <meta charset="UTF-8">
       <title>Solicitação de Conserto ou Troca - ${maintenance.numeroDocumento}</title>
       <style>
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         @page { size: A4; margin: 8mm 10mm; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #14211b; margin: 0; padding: 0; font-size: 14px; }
         .print-page {
@@ -523,6 +524,8 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
         table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
         th, td { border: 1px solid #cdd9d2; padding: 9px 12px; text-align: left; font-size: 14px; }
         th { background: #f7faf8; color: #33443b; width: 28%; font-weight: 600; }
+        .highlight-row { background-color: #dcfce7 !important; color: #064e3b !important; font-weight: 700 !important; }
+        .highlight-row td { background-color: #dcfce7 !important; color: #064e3b !important; font-weight: 700 !important; border-color: #86efac !important; }
         .inline-grid { display: flex; justify-content: space-between; gap: 16px; }
         .inline-grid > div { width: 50%; }
         .decision-box { border: 2px dashed #0f5132; padding: 12px 16px; border-radius: 8px; margin-top: 12px; background: #fcfdfc; page-break-inside: avoid; }
@@ -580,9 +583,9 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
               <th>Manutenção Proposta / Serviço</th>
               <td>${maintenance.manutencaoProposta}</td>
             </tr>
-            <tr>
+            <tr class="highlight-row">
               <th>Valor do Conserto (Orçado)</th>
-              <td><strong style="color: #0f5132; font-size: 14.5px; white-space: nowrap;">R$ ${maintenance.valorOrcado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (Peças: <span style="white-space: nowrap;">R$ ${maintenance.valorPecas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> | Serviços: <span style="white-space: nowrap;">R$ ${maintenance.valorServicos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>)</td>
+              <td><strong style="font-size: 14.5px; white-space: nowrap;">R$ ${maintenance.valorOrcado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (Peças: <span style="white-space: nowrap;">R$ ${maintenance.valorPecas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> | Serviços: <span style="white-space: nowrap;">R$ ${maintenance.valorServicos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>)</td>
             </tr>
           </table>
 
@@ -600,13 +603,13 @@ export async function generateMaintenancePdfReport(data: MaintenanceReportData) 
               <th>Valor Já Gasto em Consertos Anteriores</th>
               <td><span style="white-space: nowrap;">R$ ${totalPastSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></td>
             </tr>
-            <tr>
+            <tr class="highlight-row">
               <th>Gasto Acumulado (Anteriores + Atual)</th>
               <td><strong><span style="white-space: nowrap;">R$ ${gastoAcumuladoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></strong></td>
             </tr>
             <tr>
               <th>Valor de Compra de Bem Novo Equivalente</th>
-              <td>${valorBemNovo > 0 ? `<span style="white-space: nowrap;">R$ ${valorBemNovo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> (Já gastos <strong style="color: #0f5132;">${inviabilidadePercentual}%</strong> do valor de um bem novo)` : 'Não informado'}</td>
+              <td>${valorBemNovo > 0 ? `<span style="white-space: nowrap;">R$ ${valorBemNovo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> (Já gastos <strong style="color: #064e3b;">${inviabilidadePercentual}%</strong> do valor de um bem novo)` : 'Não informado'}</td>
             </tr>
             <tr>
               <th>Fornecedor Indicado</th>
@@ -698,6 +701,19 @@ export async function generateMovementPdfReport(data: MovementReportData) {
 
   const check = (cond: boolean) => (cond ? '[ X ]' : '[ &nbsp; ]');
 
+  // Origem dinâmica: se notice.salaOrigem estiver vazio, verifica se todos os itens têm a mesma sala, senão "Diversas"
+  let salaOrigemDisplay = notice.salaOrigem;
+  if (!salaOrigemDisplay) {
+    const salasSet = new Set(notice.itens.map((i) => i.salaOrigem).filter(Boolean));
+    if (salasSet.size === 1) {
+      salaOrigemDisplay = [...salasSet][0]!;
+    } else if (salasSet.size > 1) {
+      salaOrigemDisplay = 'Diversas / Múltiplos setores';
+    } else {
+      salaOrigemDisplay = 'Setor de Patrimônio';
+    }
+  }
+
   const html = `
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -763,7 +779,7 @@ export async function generateMovementPdfReport(data: MovementReportData) {
             <div><strong>Data Emissão:</strong> ${notice.dataEmissao}</div>
             <div><strong>Local Origem:</strong> ${notice.localOrigem}</div>
             <div><strong>Prédio Origem:</strong> ${notice.predioOrigem || '—'}</div>
-            <div><strong>Sala / Área:</strong> ${notice.salaOrigem}</div>
+            <div><strong>Sala / Área:</strong> ${salaOrigemDisplay}</div>
           </div>
 
           <!-- Tipos de Movimentação -->
@@ -825,12 +841,12 @@ export async function generateMovementPdfReport(data: MovementReportData) {
             <table>
               <thead>
                 <tr>
-                  <th style="width: 8%;">Qtd</th>
-                  <th style="width: 15%;">Plaqueta</th>
-                  <th style="width: 35%;">Descrição do Bem</th>
-                  <th style="width: 14%;">Nº Série</th>
-                  <th style="width: 14%;">Dt. Aquisição</th>
-                  <th style="width: 14%;">Vlr. Aquisição</th>
+                  <th style="width: 6%;">Qtd</th>
+                  <th style="width: 14%;">Plaqueta</th>
+                  <th style="width: 28%;">Descrição do Bem</th>
+                  <th style="width: 20%;">Sala / Origem</th>
+                  <th style="width: 12%;">Aquisição</th>
+                  <th style="width: 10%;">Valor (R$)</th>
                 </tr>
               </thead>
               <tbody>
@@ -839,9 +855,9 @@ export async function generateMovementPdfReport(data: MovementReportData) {
                   <td>${i.quantidade}</td>
                   <td style="font-family: monospace; font-weight: bold;">${i.plaqueta}</td>
                   <td>${i.descricao}</td>
-                  <td>${i.numeroSerie || '—'}</td>
+                  <td>${i.salaOrigem || notice.salaOrigem || 'Setor Padrão'}</td>
                   <td>${i.dataAquisicao || '—'}</td>
-                  <td>${i.valorAquisicao ? `R$ ${i.valorAquisicao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—'}</td>
+                  <td>${i.valorAquisicao ? `R$ ${i.valorAquisicao.toFixed(2)}` : '—'}</td>
                 </tr>
                 `).join('')}
               </tbody>

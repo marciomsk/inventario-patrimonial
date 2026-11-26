@@ -1,6 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
 import { Badge, Card, EmptyState, StatCard } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -9,10 +8,11 @@ import { Modal } from '../../components/Modal';
 import { useToast } from '../../app/ToastContext';
 import { useInventoryData } from '../../hooks/useInventoryData';
 import { db } from '../../db/database';
-import { createMaintenance, updateMaintenanceStatus, getMaintenanceHistory, listMaintenances } from '../../db/maintenanceRepository';
+import { createMaintenance, updateMaintenance, updateMaintenanceStatus, getMaintenanceHistory, listMaintenances } from '../../db/maintenanceRepository';
 import { writeOffAsset } from '../../db/assetsRepository';
 import { generateMaintenancePdfReport } from '../../services/pdfReport';
 import { formatDateTime, formatNumber } from '../../domain/format';
+import { plaquetaKey } from '../../domain/plaqueta';
 import type { Maintenance, MaintenanceStatus } from '../../domain/types';
 
 const STATUS_LABELS: Record<MaintenanceStatus, string> = {
@@ -34,16 +34,16 @@ const STATUS_TONES: Record<MaintenanceStatus, 'warning' | 'info' | 'danger' | 's
 export function MaintenancePage() {
   const { assets, assetsById, roomList } = useInventoryData();
   const { push } = useToast();
-  const navigate = useNavigate();
   const maintenances = useLiveQuery(() => listMaintenances(), []) ?? [];
 
   const [term, setTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<Maintenance | null>(null);
   const [statusModalItem, setStatusModalItem] = useState<Maintenance | null>(null);
   const [newStatus, setNewStatus] = useState<MaintenanceStatus>('APROVADO_CONSERTO');
   const [statusObs, setStatusObs] = useState('');
 
-  // Form states for new maintenance request
+  // Form states for new/edit maintenance request
   const [plaqueta, setPlaqueta] = useState('');
   const [dataAquisicao, setDataAquisicao] = useState('');
   const [manutencaoProposta, setManutencaoProposta] = useState('');
@@ -93,7 +93,6 @@ export function MaintenancePage() {
     .filter((m) => m.dataSolicitacao.includes(currentYearStr) && m.status !== 'REPROVADO')
     .reduce((sum, m) => sum + m.valorOrcado, 0);
 
-  // Alertas de inviabilidade: manutenções ou bens onde gasto acumulado ultrapassa 60% do bem novo
   const totalInviabilidadeAlerts = maintenances.filter((m) => {
     if (!m.valorBemNovo || m.valorBemNovo <= 0) return false;
     return m.valorOrcado / m.valorBemNovo >= 0.6;
@@ -111,7 +110,30 @@ export function MaintenancePage() {
     );
   }, [maintenances, term]);
 
-  async function handleCreateMaintenance(e: React.FormEvent) {
+  function openNew() {
+    setEditingItem(null);
+    resetForm();
+    setModalOpen(true);
+  }
+
+  function openEdit(item: Maintenance) {
+    setEditingItem(item);
+    setPlaqueta(item.plaqueta);
+    setManutencaoProposta(item.manutencaoProposta);
+    setFornecedor(item.fornecedor);
+    setCodigoFornecedor(item.codigoFornecedor ?? '');
+    setValorPecas(String(item.valorPecas));
+    setValorServicos(String(item.valorServicos));
+    setValorBemNovo(item.valorBemNovo ? String(item.valorBemNovo) : '');
+    setOcServicos(item.ocServicos ?? '');
+    setOcProdutos(item.ocProdutos ?? '');
+    setObservacoes(item.observacoes ?? '');
+    const foundAsset = assets.find((a) => a.plaqueta === item.plaqueta || a.plaquetaKey === plaquetaKey(item.plaqueta));
+    setDataAquisicao(foundAsset?.dataAquisicao ?? '');
+    setModalOpen(true);
+  }
+
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!plaqueta.trim()) {
       push('Informe a plaqueta do equipamento.', 'warning');
@@ -129,30 +151,48 @@ export function MaintenancePage() {
         });
       }
 
-      await createMaintenance({
-        assetId: selectedAsset?.id ?? null,
-        plaqueta: plaqueta.trim(),
-        manutencaoProposta,
-        fornecedor: fornecedor.trim() || 'Fornecedor padrão',
-        codigoFornecedor: codigoFornecedor.trim() || null,
-        valorPecas: parseFloat(valorPecas) || 0,
-        valorServicos: parseFloat(valorServicos) || 0,
-        valorBemNovo: valorBemNovo ? parseFloat(valorBemNovo) : null,
-        ocServicos: ocServicos.trim() || null,
-        ocProdutos: ocProdutos.trim() || null,
-        observacoes: observacoes.trim() || null,
-        status: 'EM_APROVACAO',
-      });
-      push('Solicitação de manutenção criada com sucesso.', 'success');
+      if (editingItem) {
+        await updateMaintenance(editingItem.id, {
+          plaqueta: plaqueta.trim(),
+          manutencaoProposta,
+          fornecedor: fornecedor.trim() || 'Fornecedor padrão',
+          codigoFornecedor: codigoFornecedor.trim() || null,
+          valorPecas: parseFloat(valorPecas) || 0,
+          valorServicos: parseFloat(valorServicos) || 0,
+          valorBemNovo: valorBemNovo ? parseFloat(valorBemNovo) : null,
+          ocServicos: ocServicos.trim() || null,
+          ocProdutos: ocProdutos.trim() || null,
+          observacoes: observacoes.trim() || null,
+        });
+        push('Solicitação de manutenção atualizada com sucesso.', 'success');
+      } else {
+        await createMaintenance({
+          assetId: selectedAsset?.id ?? null,
+          plaqueta: plaqueta.trim(),
+          manutencaoProposta,
+          fornecedor: fornecedor.trim() || 'Fornecedor padrão',
+          codigoFornecedor: codigoFornecedor.trim() || null,
+          valorPecas: parseFloat(valorPecas) || 0,
+          valorServicos: parseFloat(valorServicos) || 0,
+          valorBemNovo: valorBemNovo ? parseFloat(valorBemNovo) : null,
+          ocServicos: ocServicos.trim() || null,
+          ocProdutos: ocProdutos.trim() || null,
+          observacoes: observacoes.trim() || null,
+          status: 'EM_APROVACAO',
+        });
+        push('Solicitação de manutenção criada com sucesso.', 'success');
+      }
       setModalOpen(false);
+      setEditingItem(null);
       resetForm();
     } catch (error) {
-      push(error instanceof Error ? error.message : 'Falha ao criar solicitação.', 'error');
+      push(error instanceof Error ? error.message : 'Falha ao salvar solicitação.', 'error');
     }
   }
 
   function resetForm() {
     setPlaqueta('');
+    setDataAquisicao('');
     setManutencaoProposta('');
     setFornecedor('');
     setCodigoFornecedor('');
@@ -171,7 +211,7 @@ export function MaintenancePage() {
         title="Manutenção e Viabilidade"
         subtitle="Controle de ordens de serviço, orçamentos, histórico de consertos e análise de viabilidade (VMME110)."
         actions={
-          <Button variant="primary" icon="plus" onClick={() => setModalOpen(true)}>
+          <Button variant="primary" icon="plus" onClick={openNew}>
             Nova solicitação
           </Button>
         }
@@ -224,7 +264,7 @@ export function MaintenancePage() {
             title="Nenhuma manutenção encontrada"
             description="Cadastre uma nova solicitação ou importe o relatório VMME110.CSV na aba Importar."
             action={
-              <Button variant="primary" icon="plus" onClick={() => setModalOpen(true)}>
+              <Button variant="primary" icon="plus" onClick={openNew}>
                 Nova solicitação
               </Button>
             }
@@ -305,12 +345,9 @@ export function MaintenancePage() {
                           <Button
                             size="sm"
                             variant="secondary"
-                            onClick={() => {
-                              navigate('/movimentacao', { state: { prefillMaintenance: item } });
-                            }}
-                            title="Gerar CMB de Remessa"
+                            onClick={() => openEdit(item)}
                           >
-                            CMB
+                            Editar
                           </Button>
                           <Button
                             size="sm"
@@ -348,24 +385,24 @@ export function MaintenancePage() {
         )}
       </Card>
 
-      {/* Modal Nova Solicitação */}
+      {/* Modal Nova/Editar Solicitação */}
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         wide
-        title="Nova Solicitação de Conserto ou Troca"
+        title={editingItem ? `Editar Solicitação — ${editingItem.numeroDocumento}` : 'Nova Solicitação de Conserto ou Troca'}
         footer={
           <>
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancelar
             </Button>
-            <Button variant="primary" icon="save" onClick={handleCreateMaintenance}>
+            <Button variant="primary" icon="save" onClick={handleSave}>
               Salvar solicitação
             </Button>
           </>
         }
       >
-        <form onSubmit={handleCreateMaintenance} className="form-stack">
+        <form onSubmit={handleSave} className="form-stack">
           <p className="muted">
             Preencha os dados do equipamento e orçamento. O sistema avalia a viabilidade financeira comparando o acumulado com o valor de um bem novo.
           </p>

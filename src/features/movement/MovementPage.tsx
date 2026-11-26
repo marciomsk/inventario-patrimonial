@@ -8,7 +8,8 @@ import { Icon } from '../../components/Icon';
 import { Modal } from '../../components/Modal';
 import { useToast } from '../../app/ToastContext';
 import { useInventoryData } from '../../hooks/useInventoryData';
-import { listMovements, createMovement, generateNextCmbNumber } from '../../db/movementRepository';
+import { db } from '../../db/database';
+import { listMovements, createMovement, updateMovement, generateNextCmbNumber } from '../../db/movementRepository';
 import { generateMovementPdfReport } from '../../services/pdfReport';
 import { formatNumber } from '../../domain/format';
 import type { MovementType, MovementItem, TransferType, BaixaReason } from '../../domain/types';
@@ -37,13 +38,14 @@ export function MovementPage() {
 
   const [term, setTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any | null>(null);
 
   // Form states
   const [numeroCmb, setNumeroCmb] = useState('1054');
   const [dataEmissao, setDataEmissao] = useState(new Date().toLocaleDateString('pt-BR'));
   const [localOrigem, setLocalOrigem] = useState('Sede Principal');
   const [predioOrigem, setPredioOrigem] = useState('Prédio Administrativo');
-  const [salaOrigem, setSalaOrigem] = useState('Setor de Patrimônio');
+  const [salaOrigem, setSalaOrigem] = useState('');
   const [tipoMovimentacao, setTipoMovimentacao] = useState<MovementType>(
     stateParam?.prefillMaintenance ? 'REMESSA_CONSERTO' : 'TRANSFERENCIA',
   );
@@ -71,6 +73,7 @@ export function MovementPage() {
   // Itens
   const [plaquetaInput, setPlaquetaInput] = useState(stateParam?.prefillMaintenance?.plaqueta ?? '');
   const [serieInput, setSerieInput] = useState('');
+  const [dataAqInput, setDataAqInput] = useState('');
   const [valAqInput, setValAqInput] = useState(stateParam?.prefillMaintenance ? String(stateParam.prefillMaintenance.valorOrcado) : '');
   const [itens, setItens] = useState<MovementItem[]>(
     stateParam?.prefillMaintenance
@@ -83,6 +86,7 @@ export function MovementPage() {
             dataAquisicao: '',
             valorAquisicao: stateParam.prefillMaintenance.valorOrcado,
             valorResidual: 0,
+            salaOrigem: 'Setor de Manutenção',
           },
         ]
       : [],
@@ -97,11 +101,82 @@ export function MovementPage() {
   const [valorTotal, setValorTotal] = useState('');
   const [cfop, setCfop] = useState('5.949');
 
-  async function openNewModal() {
+  async function openNew() {
+    setEditingItem(null);
+    resetForm();
     const nextNum = await generateNextCmbNumber();
     setNumeroCmb(nextNum);
     setDataEmissao(new Date().toLocaleDateString('pt-BR'));
     setModalOpen(true);
+  }
+
+  function openEdit(item: any) {
+    setEditingItem(item);
+    setNumeroCmb(item.numeroCmb);
+    setDataEmissao(item.dataEmissao);
+    setLocalOrigem(item.localOrigem);
+    setPredioOrigem(item.predioOrigem ?? '');
+    setSalaOrigem(item.salaOrigem);
+    setTipoMovimentacao(item.tipoMovimentacao);
+
+    setLocalDestino(item.localDestino ?? '');
+    setPredioDestino(item.predioDestino ?? '');
+    setSalaDestino(item.salaDestino ?? '');
+    setTipoTransferencia(item.tipoTransferencia ?? 'DEFINITIVA');
+    setDataRetornoTemporaria(item.dataRetornoTemporaria ?? '');
+
+    setFornecedor(item.fornecedor ?? '');
+    setContatoFornecedor(item.contatoFornecedor ?? '');
+    setCnpjCpfFornecedor(item.cnpjCpfFornecedor ?? '');
+    setDataRetornoConserto(item.dataRetornoConserto ?? '');
+    setJustificativaConserto(item.justificativaConserto ?? '');
+
+    setMotivoBaixa(item.motivoBaixa ?? 'SUCATEAMENTO');
+    setJustificativaDestinoBaixa(item.justificativaDestinoBaixa ?? '');
+
+    setItens(item.itens ?? []);
+    setCedenteNome(item.cedenteNome ?? '');
+    setReceptorNome(item.receptorNome ?? '');
+    setAplicadoNoInventario(item.aplicadoNoInventario ?? true);
+
+    setNaturezaOperacao(item.naturezaOperacao ?? '');
+    setValorTotal(item.valorTotal ? String(item.valorTotal) : '');
+    setCfop(item.cfop ?? '');
+
+    setModalOpen(true);
+  }
+
+  function resetForm() {
+    setLocalOrigem('Sede Principal');
+    setPredioOrigem('Prédio Administrativo');
+    setSalaOrigem('');
+    setLocalDestino('');
+    setPredioDestino('');
+    setSalaDestino('');
+    setFornecedor('');
+    setContatoFornecedor('');
+    setCnpjCpfFornecedor('');
+    setDataRetornoConserto('');
+    setJustificativaConserto('');
+    setJustificativaDestinoBaixa('');
+    setItens([]);
+    setPlaquetaInput('');
+    setSerieInput('');
+    setDataAqInput('');
+    setValAqInput('');
+    setCedenteNome('');
+    setReceptorNome('');
+  }
+
+  function handlePlaquetaChange(val: string) {
+    setPlaquetaInput(val);
+    const clean = val.trim().toLowerCase();
+    if (!clean) return;
+    const found = assets.find((a) => a.plaqueta.toLowerCase() === clean || a.plaquetaKey === clean);
+    if (found) {
+      if (found.dataAquisicao) setDataAqInput(found.dataAquisicao);
+      if (found.localOriginal && !salaOrigem) setSalaOrigem(found.localOriginal);
+    }
   }
 
   function handleAddItem() {
@@ -112,7 +187,8 @@ export function MovementPage() {
     }
     const found = assets.find((a) => a.plaqueta === p || a.plaquetaKey === p.toUpperCase());
     const desc = found?.descricao || 'Equipamento Patrimonial';
-    const dtAq = found?.dataAquisicao || '';
+    const dtAq = dataAqInput.trim() || found?.dataAquisicao || '';
+    const originRoom = found?.localOriginal || salaOrigem || 'Setor Padrão';
 
     setItens((prev) => [
       ...prev,
@@ -124,10 +200,12 @@ export function MovementPage() {
         dataAquisicao: dtAq || null,
         valorAquisicao: valAqInput ? parseFloat(valAqInput) : null,
         valorResidual: 0,
+        salaOrigem: originRoom,
       },
     ]);
     setPlaquetaInput('');
     setSerieInput('');
+    setDataAqInput('');
     setValAqInput('');
   }
 
@@ -143,12 +221,24 @@ export function MovementPage() {
     }
 
     try {
-      await createMovement({
+      // Atualiza data de aquisição permanente no cadastro dos bens
+      for (const item of itens) {
+        if (item.dataAquisicao) {
+          const found = assets.find((a) => a.plaqueta === item.plaqueta || a.plaquetaKey === plaquetaKey(item.plaqueta));
+          if (found) {
+            await db.assets.update(found.id, { dataAquisicao: item.dataAquisicao });
+          }
+        }
+      }
+
+      const effectiveSalaOrigem = salaOrigem.trim() || (itens.length > 0 && itens[0].salaOrigem) || 'Setor Padrão';
+
+      const payload = {
         numeroCmb,
         dataEmissao,
         localOrigem,
         predioOrigem,
-        salaOrigem,
+        salaOrigem: effectiveSalaOrigem,
         tipoMovimentacao,
         localDestino: localDestino || null,
         predioDestino: predioDestino || null,
@@ -169,10 +259,18 @@ export function MovementPage() {
         valorTotal: valorTotal ? parseFloat(valorTotal) : null,
         cfop: cfop || null,
         aplicadoNoInventario,
-      });
+      };
 
-      push(`CMB Nº ${numeroCmb} gerado com sucesso.`, 'success');
+      if (editingItem) {
+        await updateMovement(editingItem.id, payload);
+        push(`CMB Nº ${numeroCmb} atualizado com sucesso.`, 'success');
+      } else {
+        await createMovement(payload);
+        push(`CMB Nº ${numeroCmb} emitido com sucesso.`, 'success');
+      }
+
       setModalOpen(false);
+      setEditingItem(null);
     } catch (err) {
       push(err instanceof Error ? err.message : 'Falha ao salvar CMB.', 'error');
     }
@@ -196,7 +294,7 @@ export function MovementPage() {
         title="Comunicado de Movimentação de Bens (CMB)"
         subtitle="Controle digital de aquisições, transferências, remessas para conserto e baixas patrimoniais (Clube Recreativo Dores)."
         actions={
-          <Button variant="primary" icon="plus" onClick={openNewModal}>
+          <Button variant="primary" icon="plus" onClick={openNew}>
             Novo CMB
           </Button>
         }
@@ -249,7 +347,7 @@ export function MovementPage() {
             title="Nenhum CMB encontrado"
             description="Emita o primeiro comunicado de movimentação digital."
             action={
-              <Button variant="primary" icon="plus" onClick={openNewModal}>
+              <Button variant="primary" icon="plus" onClick={openNew}>
                 Novo CMB
               </Button>
             }
@@ -290,14 +388,23 @@ export function MovementPage() {
                       )}
                     </td>
                     <td>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        icon="file"
-                        onClick={() => generateMovementPdfReport({ notice: item })}
-                      >
-                        Gerar PDF
-                      </Button>
+                      <div className="row-actions" style={{ gap: '6px' }}>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          icon="file"
+                          onClick={() => generateMovementPdfReport({ notice: item })}
+                        >
+                          PDF
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => openEdit(item)}
+                        >
+                          Editar
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -307,19 +414,19 @@ export function MovementPage() {
         )}
       </Card>
 
-      {/* Modal Novo CMB */}
+      {/* Modal Novo/Editar CMB */}
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         wide
-        title={`Novo Comunicado de Movimentação de Bens (CMB)`}
+        title={editingItem ? `Editar CMB — Nº ${editingItem.numeroCmb}` : 'Novo Comunicado de Movimentação de Bens (CMB)'}
         footer={
           <>
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancelar
             </Button>
             <Button variant="primary" icon="save" onClick={handleSave}>
-              Emitir e gerar PDF
+              Salvar e gerar PDF
             </Button>
           </>
         }
@@ -361,6 +468,17 @@ export function MovementPage() {
               </select>
             </label>
             <label className="field">
+              <span>Sala / Área de Origem</span>
+              <input
+                value={salaOrigem}
+                onChange={(e) => setSalaOrigem(e.target.value)}
+                placeholder="Automático conforme itens ou digite uma geral"
+              />
+            </label>
+          </div>
+
+          <div className="field-row">
+            <label className="field">
               <span>Local / Sede Origem</span>
               <input
                 value={localOrigem}
@@ -369,24 +487,12 @@ export function MovementPage() {
                 required
               />
             </label>
-          </div>
-
-          <div className="field-row">
             <label className="field">
               <span>Prédio Origem</span>
               <input
                 value={predioOrigem}
                 onChange={(e) => setPredioOrigem(e.target.value)}
                 placeholder="Ex.: Prédio Administrativo"
-              />
-            </label>
-            <label className="field">
-              <span>Sala / Área de Origem</span>
-              <input
-                value={salaOrigem}
-                onChange={(e) => setSalaOrigem(e.target.value)}
-                placeholder="Ex.: Setor de Patrimônio"
-                required
               />
             </label>
           </div>
@@ -533,7 +639,7 @@ export function MovementPage() {
                 <span>Plaqueta do Bem</span>
                 <input
                   value={plaquetaInput}
-                  onChange={(e) => setPlaquetaInput(e.target.value)}
+                  onChange={(e) => handlePlaquetaChange(e.target.value)}
                   placeholder="Ex.: 022308"
                 />
               </label>
@@ -543,6 +649,14 @@ export function MovementPage() {
                   value={serieInput}
                   onChange={(e) => setSerieInput(e.target.value)}
                   placeholder="Número de série"
+                />
+              </label>
+              <label className="field">
+                <span>Data de Aquisição</span>
+                <input
+                  value={dataAqInput}
+                  onChange={(e) => setDataAqInput(e.target.value)}
+                  placeholder="DD/MM/AAAA"
                 />
               </label>
               <label className="field">
@@ -568,7 +682,9 @@ export function MovementPage() {
                   <tr>
                     <th>Plaqueta</th>
                     <th>Descrição</th>
+                    <th>Origem</th>
                     <th>Série</th>
+                    <th>Aquisição</th>
                     <th>Valor (R$)</th>
                     <th>Ação</th>
                   </tr>
@@ -578,7 +694,9 @@ export function MovementPage() {
                     <tr key={idx}>
                       <td className="mono"><strong>{it.plaqueta}</strong></td>
                       <td>{it.descricao}</td>
+                      <td>{it.salaOrigem || '—'}</td>
                       <td>{it.numeroSerie || '—'}</td>
+                      <td>{it.dataAquisicao || '—'}</td>
                       <td>{it.valorAquisicao ? `R$ ${it.valorAquisicao.toFixed(2)}` : '—'}</td>
                       <td>
                         <Button type="button" variant="danger" size="sm" onClick={() => handleRemoveItem(idx)}>
